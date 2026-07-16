@@ -1,0 +1,10 @@
+.env
+data/*.db
+data/images/*
+n8n_data/
+searxng/uwsgi.ini
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.venv/

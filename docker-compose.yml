@@ -1,0 +1,115 @@
+networks:
+  pipeline_net:
+    driver: bridge
+
+volumes:
+  ollama_models:
+  n8n_data:
+  chroma_data:
+
+services:
+  searxng:
+    image: searxng/searxng:latest
+    container_name: searxng
+    networks: [pipeline_net]
+    expose:
+      - "8080"
+    volumes:
+      - ./searxng:/etc/searxng:rw
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    networks: [pipeline_net]
+    volumes:
+      - ollama_models:/root/.ollama
+    expose:
+      - "11434"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  ollama-model-init:
+    image: ollama/ollama:latest
+    container_name: ollama-model-init
+    networks: [pipeline_net]
+    volumes:
+      - ollama_models:/root/.ollama
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    depends_on:
+      ollama:
+        condition: service_healthy
+    command: ["pull", "nomic-embed-text"]
+    restart: "no"
+
+  engine-api:
+    build: ./engine-api
+    container_name: engine-api
+    networks: [pipeline_net]
+    volumes:
+      - ./engine-api:/app
+      - ./data:/data
+      - chroma_data:/data/chroma
+    env_file: .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      ollama:
+        condition: service_healthy
+      searxng:
+        condition: service_healthy
+      ollama-model-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  review-ui:
+    build: ./review-ui
+    container_name: review-ui
+    networks: [pipeline_net]
+    volumes:
+      - ./data:/data
+    environment:
+      - ENGINE_API_URL=http://engine-api:8000
+    ports:
+      - "8503:8501"
+    depends_on:
+      engine-api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n
+    networks: [pipeline_net]
+    volumes:
+      - n8n_data:/home/node/.n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE:-Europe/Berlin}
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:-change-me}
+      - WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:5678}
+    depends_on:
+      engine-api:
+        condition: service_healthy
+    restart: unless-stopped

@@ -1,0 +1,41 @@
+use_default_settings: true
+
+server:
+  # IMPORTANT: replace with a random string before deploying
+  # Generate one: python3 -c "import secrets; print(secrets.token_hex(32))"
+  secret_key: "changeme-replace-with-a-random-32-char-string"
+  limiter: false
+  image_proxy: false
+  port: 8080
+  bind_address: "0.0.0.0"
+
+search:
+  safe_search: 0
+  default_lang: "de-DE"
+  formats:
+    - html
+    - json
+
+outgoing:
+  request_timeout: 8.0
+  max_request_timeout: 15.0
+  useragent_suffix: ""
+
+engines:
+  - name: bing news
+    engine: bing_news
+    shortcut: bn
+    categories: news
+    disabled: false
+
+  - name: google news
+    engine: google_news
+    shortcut: gn
+    categories: news
+    disabled: false
+
+  - name: duckduckgo
+    engine: duckduckgo
+    shortcut: ddg
+    categories: general
+    disabled: false

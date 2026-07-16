@@ -1,0 +1,80 @@
+{
+  "name": "Logistik LinkedIn Pipeline",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 6,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "name": "Daily 06:00 (Europe/Berlin)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300],
+      "id": "schedule-trigger"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://engine-api:8000/run",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "Content-Type", "value": "application/json"}
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": []
+        },
+        "options": {
+          "timeout": 3600000
+        }
+      },
+      "name": "Run Pipeline (/run)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300],
+      "id": "http-run"
+    },
+    {
+      "parameters": {
+        "message": "=✅ Pipeline complete! Created {{ $json.created }} LinkedIn drafts. Review at http://localhost:8501",
+        "additionalFields": {}
+      },
+      "name": "Notify (optional)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "id": "notify"
+    }
+  ],
+  "connections": {
+    "Daily 06:00 (Europe/Berlin)": {
+      "main": [
+        [{"node": "Run Pipeline (/run)", "type": "main", "index": 0}]
+      ]
+    },
+    "Run Pipeline (/run)": {
+      "main": [
+        [{"node": "Notify (optional)", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "timezone": "Europe/Berlin",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "tags": ["logistik", "linkedin", "pipeline"],
+  "meta": {
+    "description": "Daily pipeline: fetches German logistics news, generates LinkedIn posts + images via Ollama, stores drafts in SQLite for review."
+  },
+  "id": "logistik-linkedin-pipeline-v1"
+}
