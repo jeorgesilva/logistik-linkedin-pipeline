@@ -8,22 +8,6 @@ volumes:
   chroma_data:
 
 services:
-  searxng:
-    image: searxng/searxng:latest
-    container_name: searxng
-    networks: [pipeline_net]
-    expose:
-      - "8080"
-    volumes:
-      - ./searxng:/etc/searxng:rw
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 20s
-
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
@@ -67,8 +51,6 @@ services:
       - "8000:8000"
     depends_on:
       ollama:
-        condition: service_healthy
-      searxng:
         condition: service_healthy
       ollama-model-init:
         condition: service_completed_successfully

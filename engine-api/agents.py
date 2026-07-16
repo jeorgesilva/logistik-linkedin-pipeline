@@ -27,6 +27,10 @@ wenn eine narrative Brücke vorgegeben ist: öffne mit dem realen Ereignis (kein
 erkläre den konkreten Speditions-Impact, verbinde ihn erst zuletzt mit LogAid — der Leser soll denken \
 "das betrifft mich" oder "das könnte mich betreffen"; \
 LogAid höchstens einmal erwähnen, immer nach dem Argument — nie als Prämisse; \
+nie eine im Artikel genannte private Firma (außer LogAid) für ihre Leistungen, Lösungen oder \
+Erfolge loben oder hervorheben — wird eine Drittfirma erwähnt, immer analytisch und kritisch \
+bleiben (Risiken, Trade-offs, Bedeutung für Wettbewerber), nie im Ton einer Erfolgsgeschichte \
+oder Werbung; \
 ein Call-to-Action oder eine offene Frage am Ende; 5–7 Hashtags am Ende, nie inline; \
 kein Clickbait; verbotene Phrasen: "innovative Lösung", "ganzheitlich", "Synergien", \
 "Wir freuen uns zu verkünden", "revolutionär", "state of the art". \
@@ -64,7 +68,8 @@ Fülle dieses JSON aus:
   "o_que_aconteceu": "1-2 Sätze: Was genau passiert ist (konkret, faktenbasiert)",
   "impacto_para_spedition": "Konkrete Auswirkung für eine Spedition. NUR wenn logisch belegbar.",
   "risco_ou_oportunidade": "Konkretes Risiko oder Chance im Betrieb",
-  "conexao_logaid": "Optional: ehrliche Verbindung zu LogAid"
+  "conexao_logaid": "Optional: ehrliche Verbindung zu LogAid",
+  "empresa_mencionada": "Optional: Name der im Artikel zitierten Drittfirma, sonst leerer String"
 }
 
 WICHTIG:
@@ -83,10 +88,32 @@ Wenn KEINE überzeugende Auswirkung existiert:
 Antworte:
 {"invalid": true}
 
+REGEL ÜBER DRITTFIRMEN:
+Wenn der Artikel eine bestimmte private Firma nennt (außer LogAid), behandle sie nur als \
+illustratives Beispiel eines größeren Branchenmusters — nie als Protagonistin oder \
+"Erfolgsgeschichte". Übernimm nie Lob, Superlative oder werbliche Sprache des Quellartikels \
+über diese Firma. Generalisiere wo möglich: statt "Firma X hat Y gemacht" schreibe "manche \
+Speditionen machen Y" oder "die Branche bewegt sich in Richtung Y" — außer der Firmenname ist \
+für die Glaubwürdigkeit des Fakts zwingend nötig.
+
 Antworte NUR als JSON mit exakt diesen Schlüsseln.
 WICHTIG: Wenn impacto_para_spedition allgemeines beschreibt oder 'nicht anwendbar' enthält, \
 schreibe in impacto_para_spedition: nicht spezifisch genug. \
-Antworte NUR als JSON mit exakt diesen vier Schlüsseln."""
+Antworte NUR als JSON mit den vier Pflicht-Schlüsseln plus optional empresa_mencionada."""
+
+_AD_CHECK_SYSTEM = """\
+Du bewertest, ob ein LinkedIn-Beitrag wie eine unabhängige, kritische Analyse eines \
+Branchenthemas klingt — oder wie Werbung/PR für ein bestimmtes DRITTUNTERNEHMEN oder \
+dessen Produkt. \
+WICHTIG: LogAid ist der Auftraggeber dieses Beitrags — eine kurze, sachliche Erwähnung von \
+LogAid am Ende des Beitrags ist der reguläre, erwünschte Zweck des Textes und zählt NIEMALS \
+als soa_como_ad=true, selbst wenn sie positiv formuliert ist. Bewerte NUR den Ton gegenüber \
+Drittfirmen (jedes im Beitrag genannte Unternehmen außer LogAid). \
+Kriterien für "soa_como_ad=true": der Beitrag lobt ein Drittunternehmen, hebt dessen \
+Produkt/Lösung positiv hervor, oder liest sich wie eine Erfolgsgeschichte/Case Study eines \
+Dritten. \
+Antworte NUR als JSON: {"soa_como_ad": true, "motivo": "Begründung auf Deutsch"} \
+oder {"soa_como_ad": false, "motivo": "Begründung auf Deutsch"}."""
 
 _ART_DIRECTOR_SYSTEM = """\
 You write text-to-image prompts for a clean, professional, editorial LinkedIn header \
@@ -200,6 +227,21 @@ def evaluate_relevance(article: dict) -> Optional[dict]:
             logger.warning("Relevance parse failed (attempt %d): %s", attempt + 1, raw[:200])
         except Exception as e:
             logger.error("Relevance check error (attempt %d): %s", attempt + 1, e)
+    return None
+
+
+def evaluate_promotional_tone(post_text: str) -> Optional[dict]:
+    """Step 4 (post-generation): flag posts that read as advertising for a third party."""
+    required = ["soa_como_ad", "motivo"]
+    for attempt in range(2):
+        try:
+            raw = _chat(WRITER_MODEL, _AD_CHECK_SYSTEM, post_text)
+            data = _parse_json_obj(raw, required)
+            if data is not None:
+                return data
+            logger.warning("Ad-check parse failed (attempt %d): %s", attempt + 1, raw[:200])
+        except Exception as e:
+            logger.error("Ad-check error (attempt %d): %s", attempt + 1, e)
     return None
 
 

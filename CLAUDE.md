@@ -7,8 +7,7 @@ Pipeline self-hosted que busca notícias de logística alemã, gera posts para L
 ## Arquitetura
 
 ```
-rss.py (feeds curados)  → fonte ativa de artigos (FreightWaves, TTNews, Logistik Heute, etc.)
-search.py (SearXNG+DDG) → módulo pronto, pendente integração para substituir rss.py
+rss.py (feeds curados)  → fonte ativa de artigos (Logistik Heute, Logistra, Destatis, BALM, EUR-Lex, etc.)
 ollama                  → LLM local (qwen2.5 + llama3.2:3b + nomic-embed-text)
 engine-api              → FastAPI, orquestra pipeline e expõe REST API
 review-ui               → Streamlit, fila de revisão humana
@@ -23,18 +22,18 @@ data/style_guide/       → Arquivos .md do style guide LogAid (editáveis sem r
 
 | Arquivo | Papel |
 |---|---|
-| `engine-api/pipeline.py` | Orquestra busca → extração → LLM → imagem |
-| `engine-api/agents.py` | Agent 1: gera post (qwen2.5) · Agent 2: gera image prompt (llama3.2:3b) |
+| `engine-api/pipeline.py` | Orquestra busca → filtro de relevância → extração → ponte narrativa → LLM writer → verificação de tom promocional → imagem |
+| `engine-api/agents.py` | Agent 1: gera post (qwen2.5) · Agent 2: gera image prompt (llama3.2:3b) · `evaluate_promotional_tone()`: verificação anti-propaganda (ver seção própria abaixo) |
 | `engine-api/kb.py` | Knowledge Base: ChromaDB client, embedding via Ollama, ingest e retrieval |
 | `engine-api/main.py` | FastAPI routes + auto-sync KB ao aprovar post |
 | `engine-api/db.py` | SQLite helpers |
-| `engine-api/rss.py` | **Fonte ativa de artigos** — feeds RSS curados (FreightWaves, TTNews, Logistik Heute, Logistra, Logistik News24) |
-| `engine-api/search.py` | SearXNG+DDG search client — **pendente integração** para substituir rss.py |
+| `engine-api/rss.py` | **Fonte ativa de artigos** — feeds RSS curados: trade press alemão (Logistik Heute, Logistra, Logistik News24) + institucional DE/EU (Destatis, Bundesnetzagentur, BALM, EUR-Lex, DG MOVE). FreightWaves/TTNews removidos em 2026-07-16 (decisão do usuário, escopo DE/EU) |
 | `engine-api/extract.py` | Extração de artigos (trafilatura + crawl4ai fallback) |
 | `engine-api/rank.py` | Dedup e ranking de artigos por TF-IDF |
 | `engine-api/images.py` | Geração de imagens (Pollinations.ai) |
 | `engine-api/linkedin.py` | Publicação no LinkedIn via API (desabilitado por padrão — `LINKEDIN_ENABLED=false`) |
 | `engine-api/ingest_seed_posts.py` | Script de bootstrap: insere 5 posts seed no KB (rodar uma vez) |
+| `engine-api/scripts/debug/` | Scripts manuais de debug (`manual_test.py`, `manual_batch.py`, `fetch_article.py`, `manual_articles.json`) — não coletados pelo pytest, movidos para fora de `tests/` |
 | `review-ui/app.py` | Streamlit UI com painel KB na sidebar |
 | `docker-compose.yml` | Stack completa + ollama-model-init para nomic-embed-text |
 | `.env` | Variáveis de ambiente (não versionar) |
@@ -50,8 +49,6 @@ OLLAMA_IMAGE_PROMPT_MODEL=llama3.2:3b
 OLLAMA_REQUEST_TIMEOUT=600
 
 # Busca
-SEARXNG_URL=http://searxng:8080
-NEWS_KEYWORDS=Logistik Deutschland;Lieferkette;Spedition
 MAX_ARTICLES=10
 
 # Knowledge Base (RAG)
@@ -117,7 +114,7 @@ Arquivos atuais:
 Sidebar:
 - **Refresh** — recarrega posts
 - **Generate Missing Texts** — `POST /posts/regenerate-missing-text` (não-bloqueante)
-- **Run Pipeline Now** — `POST /run` (bloqueante, aguarda spinner)
+- **Run Pipeline Now** — `POST /run` (assíncrono via `BackgroundTasks` — retorna `{"status": "started"}` imediatamente; a UI não aguarda spinner, acompanhar progresso via `docker logs engine-api -f`)
 - **Knowledge Base** (seção):
   - Indicador RAG ativo/inativo (verde/amarelo)
   - **Sync Approved Posts** — `POST /kb/sync` (background)
@@ -130,9 +127,33 @@ Card de cada post:
 - Botão "✍️ Generate Text" aparece só se `post_text` estiver vazio
 - Botões: Save / Approve / Reject / Restore
 
+## Regras anti-propaganda / distância crítica
+
+Quando um artigo cita uma empresa privada específica (que não seja a LogAid), o pipeline mantém
+distância crítica em vez de ecoar o tom elogioso da fonte:
+
+- **Regras de prompt** (`agents.py`, `_BRIDGE_SYSTEM` e `_WRITER_SYSTEM`): uma empresa terceira
+  citada é tratada apenas como exemplo ilustrativo de um padrão maior do setor — nunca como
+  protagonista ou "case de sucesso". O writer é instruído a manter tom analítico (riscos,
+  trade-offs, implicações competitivas) em vez de elogioso.
+- **Verificação automática** (`evaluate_promotional_tone()` em `agents.py`, conectada em
+  `pipeline.py:_process_articles` logo após a geração do post): uma chamada LLM dedicada
+  classifica se o post soa como análise independente ou como publicidade/PR de terceiros. A
+  menção padrão e breve da própria LogAid ao final de cada post é explicitamente excluída deste
+  critério — só tom promocional em relação a **outras** empresas dispara o descarte.
+- **Em caso positivo, o post é descartado automaticamente** — mesmo tratamento já usado para
+  bridge inválida. Nunca chega ao banco de dados nem à fila de revisão, e não há flag persistida
+  (não existe coluna `ad_risk`). Decisão de produto explícita do usuário (2026-07-16): preferir
+  uma fila de revisão limpa a arriscar falsos positivos precisando de triagem manual.
+- **Armadilha já corrigida:** a primeira versão do prompt de verificação não excluía a LogAid dos
+  critérios, então todo post gerado (mesmo com a menção de LogAid mínima e correta exigida pelo
+  próprio `_WRITER_SYSTEM`) era classificado como propaganda e descartado — um smoke test real
+  (`POST /run`) confirmou 0 posts criados antes da correção. Se `evaluate_promotional_tone()`
+  parecer descartar tudo, revisar primeiro se `_AD_CHECK_SYSTEM` ainda exclui LogAid explicitamente.
+
 ## Regras importantes
 
-- **Não reverter para Google News RSS** — `google_news.py` foi removido; a fonte ativa é `rss.py` (feeds curados). `search.py` (SearXNG+DDG) está pronto e deve substituir `rss.py` quando integrado ao `pipeline.py`.
+- **Fonte de artigos é `rss.py`** (feeds curados) — um módulo de busca web alternativo existiu no passado e foi removido por ser código morto, nunca chamado por `pipeline.py`; não reintroduzir sem uma decisão explícita de arquitetura.
 - **Nunca aninhar `st.expander` dentro de outro** — o Streamlit lança `StreamlitAPIException`. Usar `st.checkbox` para conteúdo colapsável dentro de cards.
 - **`/posts/regenerate-missing-text` e endpoints KB são assíncronos** — usam `BackgroundTasks` do FastAPI e retornam imediatamente. Timeout do Streamlit é 15s; geração e embedding levam minutos.
 - **Rebuild obrigatório após mudanças de código** — o código fica baked na imagem Docker. `docker-compose restart` não aplica mudanças; usar `docker-compose build <serviço> && docker-compose up -d <serviço>`.

@@ -1,9 +1,9 @@
 """Manual article injection — feeds pre-curated articles into the existing pipeline.
 
 Usage (from engine-api/ directory):
-    python -m tests.manual_batch
+    python -m scripts.debug.manual_batch
 
-Edit tests/manual_articles.json to add or update articles before running.
+Edit scripts/debug/manual_articles.json to add or update articles before running.
 """
 
 from __future__ import annotations
@@ -13,8 +13,8 @@ import logging
 import sys
 from pathlib import Path
 
-# Ensure engine-api/ is on the path when run as `python -m tests.manual_batch`
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Ensure engine-api/ is on the path when run as `python -m scripts.debug.manual_batch`
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from pipeline import _process_articles
 
