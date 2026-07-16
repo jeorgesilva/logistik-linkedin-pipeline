@@ -27,6 +27,10 @@ wenn eine narrative Brücke vorgegeben ist: öffne mit dem realen Ereignis (kein
 erkläre den konkreten Speditions-Impact, verbinde ihn erst zuletzt mit LogAid — der Leser soll denken \
 "das betrifft mich" oder "das könnte mich betreffen"; \
 LogAid höchstens einmal erwähnen, immer nach dem Argument — nie als Prämisse; \
+nie eine im Artikel genannte private Firma (außer LogAid) für ihre Leistungen, Lösungen oder \
+Erfolge loben oder hervorheben — wird eine Drittfirma erwähnt, immer analytisch und kritisch \
+bleiben (Risiken, Trade-offs, Bedeutung für Wettbewerber), nie im Ton einer Erfolgsgeschichte \
+oder Werbung; \
 ein Call-to-Action oder eine offene Frage am Ende; 5–7 Hashtags am Ende, nie inline; \
 kein Clickbait; verbotene Phrasen: "innovative Lösung", "ganzheitlich", "Synergien", \
 "Wir freuen uns zu verkünden", "revolutionär", "state of the art". \
@@ -64,7 +68,8 @@ Fülle dieses JSON aus:
   "o_que_aconteceu": "1-2 Sätze: Was genau passiert ist (konkret, faktenbasiert)",
   "impacto_para_spedition": "Konkrete Auswirkung für eine Spedition. NUR wenn logisch belegbar.",
   "risco_ou_oportunidade": "Konkretes Risiko oder Chance im Betrieb",
-  "conexao_logaid": "Optional: ehrliche Verbindung zu LogAid"
+  "conexao_logaid": "Optional: ehrliche Verbindung zu LogAid",
+  "empresa_mencionada": "Optional: Name der im Artikel zitierten Drittfirma, sonst leerer String"
 }
 
 WICHTIG:
@@ -83,10 +88,18 @@ Wenn KEINE überzeugende Auswirkung existiert:
 Antworte:
 {"invalid": true}
 
+REGEL ÜBER DRITTFIRMEN:
+Wenn der Artikel eine bestimmte private Firma nennt (außer LogAid), behandle sie nur als \
+illustratives Beispiel eines größeren Branchenmusters — nie als Protagonistin oder \
+"Erfolgsgeschichte". Übernimm nie Lob, Superlative oder werbliche Sprache des Quellartikels \
+über diese Firma. Generalisiere wo möglich: statt "Firma X hat Y gemacht" schreibe "manche \
+Speditionen machen Y" oder "die Branche bewegt sich in Richtung Y" — außer der Firmenname ist \
+für die Glaubwürdigkeit des Fakts zwingend nötig.
+
 Antworte NUR als JSON mit exakt diesen Schlüsseln.
 WICHTIG: Wenn impacto_para_spedition allgemeines beschreibt oder 'nicht anwendbar' enthält, \
 schreibe in impacto_para_spedition: nicht spezifisch genug. \
-Antworte NUR als JSON mit exakt diesen vier Schlüsseln."""
+Antworte NUR als JSON mit den vier Pflicht-Schlüsseln plus optional empresa_mencionada."""
 
 _ART_DIRECTOR_SYSTEM = """\
 You write text-to-image prompts for a clean, professional, editorial LinkedIn header \
