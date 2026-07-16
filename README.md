@@ -105,10 +105,7 @@ All settings are in `.env` (copy from `.env.template`):
 | `OLLAMA_WRITER_MODEL` | `qwen2.5-coder:latest` | LLM for German post writing |
 | `OLLAMA_IMAGE_PROMPT_MODEL` | `qwen2.5-coder:latest` | LLM for image-prompt generation |
 | `OLLAMA_REQUEST_TIMEOUT` | `600` | Seconds before LLM call times out |
-| `SEARXNG_URL` | `http://searxng:8080` | SearXNG URL — used once `search.py` is integrated |
-| `NEWS_KEYWORDS` | (10 German logistics terms) | Semicolon-separated — used by `search.py` (pending) |
 | `MAX_ARTICLES` | `10` | Max articles selected per pipeline run |
-| `ARTICLE_MAX_AGE_DAYS` | `7` | Max article age in days |
 | `EMBED_MODEL` | `nomic-embed-text` | Ollama model used for ChromaDB embeddings |
 | `KB_PATH` | `/data/chroma` | ChromaDB persistence path |
 | `KB_MIN_EXAMPLES` | `3` | Minimum approved posts for RAG to activate |

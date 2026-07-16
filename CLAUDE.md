@@ -50,8 +50,6 @@ OLLAMA_IMAGE_PROMPT_MODEL=llama3.2:3b
 OLLAMA_REQUEST_TIMEOUT=600
 
 # Busca
-SEARXNG_URL=http://searxng:8080
-NEWS_KEYWORDS=Logistik Deutschland;Lieferkette;Spedition
 MAX_ARTICLES=10
 
 # Knowledge Base (RAG)
