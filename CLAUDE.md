@@ -8,7 +8,6 @@ Pipeline self-hosted que busca notícias de logística alemã, gera posts para L
 
 ```
 rss.py (feeds curados)  → fonte ativa de artigos (FreightWaves, TTNews, Logistik Heute, etc.)
-search.py (SearXNG+DDG) → módulo pronto, pendente integração para substituir rss.py
 ollama                  → LLM local (qwen2.5 + llama3.2:3b + nomic-embed-text)
 engine-api              → FastAPI, orquestra pipeline e expõe REST API
 review-ui               → Streamlit, fila de revisão humana
@@ -29,7 +28,6 @@ data/style_guide/       → Arquivos .md do style guide LogAid (editáveis sem r
 | `engine-api/main.py` | FastAPI routes + auto-sync KB ao aprovar post |
 | `engine-api/db.py` | SQLite helpers |
 | `engine-api/rss.py` | **Fonte ativa de artigos** — feeds RSS curados (FreightWaves, TTNews, Logistik Heute, Logistra, Logistik News24) |
-| `engine-api/search.py` | SearXNG+DDG search client — **pendente integração** para substituir rss.py |
 | `engine-api/extract.py` | Extração de artigos (trafilatura + crawl4ai fallback) |
 | `engine-api/rank.py` | Dedup e ranking de artigos por TF-IDF |
 | `engine-api/images.py` | Geração de imagens (Pollinations.ai) |
@@ -130,7 +128,7 @@ Card de cada post:
 
 ## Regras importantes
 
-- **Não reverter para Google News RSS** — `google_news.py` foi removido; a fonte ativa é `rss.py` (feeds curados). `search.py` (SearXNG+DDG) está pronto e deve substituir `rss.py` quando integrado ao `pipeline.py`.
+- **Fonte de artigos é `rss.py`** (feeds curados) — um módulo de busca web alternativo existiu no passado e foi removido por ser código morto, nunca chamado por `pipeline.py`; não reintroduzir sem uma decisão explícita de arquitetura.
 - **Nunca aninhar `st.expander` dentro de outro** — o Streamlit lança `StreamlitAPIException`. Usar `st.checkbox` para conteúdo colapsável dentro de cards.
 - **`/posts/regenerate-missing-text` e endpoints KB são assíncronos** — usam `BackgroundTasks` do FastAPI e retornam imediatamente. Timeout do Streamlit é 15s; geração e embedding levam minutos.
 - **Rebuild obrigatório após mudanças de código** — o código fica baked na imagem Docker. `docker-compose restart` não aplica mudanças; usar `docker-compose build <serviço> && docker-compose up -d <serviço>`.

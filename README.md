@@ -12,8 +12,6 @@ Self-hosted, 24/7 content pipeline that turns German logistics news into LinkedI
 7. Generates LinkedIn header images via Pollinations.ai (free, no API key)
 8. Stores drafts in SQLite → surfaces them in a Streamlit review queue
 
-> **Upcoming:** `search.py` (SearXNG + DuckDuckGo fallback) is implemented and will replace the RSS feeds once integrated into the pipeline.
-
 ---
 
 ## Architecture
@@ -21,8 +19,7 @@ Self-hosted, 24/7 content pipeline that turns German logistics news into LinkedI
 ```
 n8n (scheduler)
     └─► engine-api (FastAPI)
-            ├─► RSS feeds (curated logistics sources) ─ article discovery (active)
-            ├─► SearXNG + DuckDuckGo ─────────────────── pending integration
+            ├─► RSS feeds (curated logistics sources) ─ article discovery
             ├─► Ollama — main LLM (host machine)         qwen2.5-coder:latest
             ├─► Ollama — embed model (Docker)            nomic-embed-text
             ├─► ChromaDB ─ RAG (approved posts + style guide)
@@ -80,7 +77,6 @@ This inserts 5 LogAid-style posts into SQLite as `approved` and embeds them into
 | review-ui (Streamlit) | 8503 | http://localhost:8503 |
 | n8n | 5678 | http://localhost:5678 |
 | ollama (embed) | internal only | — |
-| searxng | internal only | — |
 
 ---
 
