@@ -7,7 +7,7 @@ Pipeline self-hosted que busca notícias de logística alemã, gera posts para L
 ## Arquitetura
 
 ```
-rss.py (feeds curados)  → fonte ativa de artigos (FreightWaves, TTNews, Logistik Heute, etc.)
+rss.py (feeds curados)  → fonte ativa de artigos (Logistik Heute, Logistra, Destatis, BALM, EUR-Lex, etc.)
 ollama                  → LLM local (qwen2.5 + llama3.2:3b + nomic-embed-text)
 engine-api              → FastAPI, orquestra pipeline e expõe REST API
 review-ui               → Streamlit, fila de revisão humana
@@ -27,7 +27,7 @@ data/style_guide/       → Arquivos .md do style guide LogAid (editáveis sem r
 | `engine-api/kb.py` | Knowledge Base: ChromaDB client, embedding via Ollama, ingest e retrieval |
 | `engine-api/main.py` | FastAPI routes + auto-sync KB ao aprovar post |
 | `engine-api/db.py` | SQLite helpers |
-| `engine-api/rss.py` | **Fonte ativa de artigos** — feeds RSS curados (FreightWaves, TTNews, Logistik Heute, Logistra, Logistik News24) |
+| `engine-api/rss.py` | **Fonte ativa de artigos** — feeds RSS curados: trade press alemão (Logistik Heute, Logistra, Logistik News24) + institucional DE/EU (Destatis, Bundesnetzagentur, BALM, EUR-Lex, DG MOVE). FreightWaves/TTNews removidos em 2026-07-16 (decisão do usuário, escopo DE/EU) |
 | `engine-api/extract.py` | Extração de artigos (trafilatura + crawl4ai fallback) |
 | `engine-api/rank.py` | Dedup e ranking de artigos por TF-IDF |
 | `engine-api/images.py` | Geração de imagens (Pollinations.ai) |

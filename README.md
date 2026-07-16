@@ -3,7 +3,7 @@
 Self-hosted, 24/7 content pipeline that turns German logistics news into LinkedIn drafts automatically.
 
 **Daily at 06:00 (Berlin time):**
-1. Reads from curated RSS feeds (FreightWaves, TTNews, Logistik Heute, Logistra, Logistik News24)
+1. Reads from curated RSS feeds — German trade press (Logistik Heute, Logistra, Logistik News24) + DE/EU institutional (Destatis, Bundesnetzagentur, BALM, EUR-Lex, DG MOVE)
 2. Deduplicates and selects top articles (TF-IDF ranking)
 3. Filters by relevance using an Ollama LLM agent
 4. Extracts full article text (trafilatura + crawl4ai fallback)
