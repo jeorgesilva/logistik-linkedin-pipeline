@@ -7,10 +7,11 @@ Self-hosted, 24/7 content pipeline that turns German logistics news into LinkedI
 2. Deduplicates and selects top articles (TF-IDF ranking)
 3. Filters by relevance using an Ollama LLM agent
 4. Extracts full article text (trafilatura + crawl4ai fallback)
-5. Runs 2 Ollama LLM agents: German post writer + image-prompt generator
-6. Post writer uses RAG: retrieves similar approved posts + style guide chunks from ChromaDB
-7. Generates LinkedIn header images via Pollinations.ai (free, no API key)
-8. Stores drafts in SQLite → surfaces them in a Streamlit review queue
+5. Builds a narrative bridge between the news event and a Spedition's daily reality (discards articles with no concrete, defensible impact)
+6. Runs 2 Ollama LLM agents: German post writer + image-prompt generator. Post writer uses RAG: retrieves similar approved posts + style guide chunks from ChromaDB
+7. Checks the generated post for promotional tone toward third-party companies — auto-discarded if it reads like advertising/PR for someone other than LogAid (see "Anti-Propaganda / Critical Distance" below)
+8. Generates LinkedIn header images via Pollinations.ai (free, no API key)
+9. Stores drafts in SQLite → surfaces them in a Streamlit review queue
 
 ---
 
@@ -131,6 +132,27 @@ New article → embed(title + text[:300]) via nomic-embed-text
 RAG is silently skipped if ChromaDB has fewer than `KB_MIN_EXAMPLES` approved posts, Ollama is unavailable, or ChromaDB errors. The pipeline runs normally regardless.
 
 **Style guide files** (`data/style_guide/`) are on a Docker volume — edit them directly on the host and click **Reload Style Guide** in the sidebar (or `POST /kb/reload-guidelines`). No rebuild needed.
+
+---
+
+## Anti-Propaganda / Critical Distance
+
+When an article names a specific third-party company, the pipeline is designed to keep critical
+distance instead of echoing the source's praise:
+
+- **Prompt rules** (`engine-api/agents.py`, `_BRIDGE_SYSTEM` and `_WRITER_SYSTEM`): a named
+  third-party company (never LogAid) is treated only as an illustrative example of a broader
+  industry pattern — never as a protagonist or "success story". The writer is instructed to stay
+  analytical (risks, trade-offs, competitive implications) rather than complimentary.
+- **Automated check** (`evaluate_promotional_tone()` in `agents.py`, wired into
+  `pipeline.py:_process_articles`): after a post is generated, a dedicated LLM call classifies
+  whether it reads like independent analysis or like advertising/PR for a third party. LogAid's
+  own (brief, standard) mention at the end of every post is explicitly excluded from this check —
+  only promotional tone toward *other* companies triggers it.
+- **On a positive match, the post is discarded automatically** — same treatment as an invalid
+  narrative bridge. It never reaches the database or the review queue, and there is no persisted
+  flag for it (no `ad_risk` column). This was an explicit product decision (2026-07-16): favor a
+  clean review queue over surfacing false positives for manual triage.
 
 ---
 
@@ -266,7 +288,7 @@ docker compose exec ollama ollama list
 ```bash
 docker compose logs engine-api | grep -E "RSS|articles"
 # Check feed availability manually
-curl -s https://www.freightwaves.com/feed | head -50
+curl -s https://logistik-heute.de/rss.xml | head -50
 ```
 
 **Articles returning empty full_text:**
