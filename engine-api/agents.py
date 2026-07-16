@@ -103,9 +103,15 @@ Antworte NUR als JSON mit den vier Pflicht-Schlüsseln plus optional empresa_men
 
 _AD_CHECK_SYSTEM = """\
 Du bewertest, ob ein LinkedIn-Beitrag wie eine unabhängige, kritische Analyse eines \
-Branchenthemas klingt — oder wie Werbung/PR für ein bestimmtes Unternehmen oder Produkt. \
-Kriterien für "soa_como_ad=true": der Beitrag lobt ein Unternehmen, hebt dessen Produkt/Lösung \
-positiv hervor, oder liest sich wie eine Erfolgsgeschichte/Case Study eines Dritten. \
+Branchenthemas klingt — oder wie Werbung/PR für ein bestimmtes DRITTUNTERNEHMEN oder \
+dessen Produkt. \
+WICHTIG: LogAid ist der Auftraggeber dieses Beitrags — eine kurze, sachliche Erwähnung von \
+LogAid am Ende des Beitrags ist der reguläre, erwünschte Zweck des Textes und zählt NIEMALS \
+als soa_como_ad=true, selbst wenn sie positiv formuliert ist. Bewerte NUR den Ton gegenüber \
+Drittfirmen (jedes im Beitrag genannte Unternehmen außer LogAid). \
+Kriterien für "soa_como_ad=true": der Beitrag lobt ein Drittunternehmen, hebt dessen \
+Produkt/Lösung positiv hervor, oder liest sich wie eine Erfolgsgeschichte/Case Study eines \
+Dritten. \
 Antworte NUR als JSON: {"soa_como_ad": true, "motivo": "Begründung auf Deutsch"} \
 oder {"soa_como_ad": false, "motivo": "Begründung auf Deutsch"}."""
 
