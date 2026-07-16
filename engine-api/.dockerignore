@@ -1,0 +1,8 @@
+**/__pycache__/
+**/*.pyc
+.venv/
+dev.db
+dev_images/
+dev_chroma/
+**/.pytest_cache/
+scripts/debug/manual_articles.json
