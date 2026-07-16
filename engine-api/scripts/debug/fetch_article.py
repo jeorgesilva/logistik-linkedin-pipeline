@@ -6,7 +6,7 @@ to fetch and inspect article text before adding it to manual_articles.json.
 Example:
     python -c "
     import sys; sys.path.insert(0, '.')
-    from tests.fetch_article import fetch_article_text
+    from scripts.debug.fetch_article import fetch_article_text
     print(fetch_article_text('https://trans.info/en/some-article'))
     "
 """
