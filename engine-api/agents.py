@@ -101,6 +101,14 @@ WICHTIG: Wenn impacto_para_spedition allgemeines beschreibt oder 'nicht anwendba
 schreibe in impacto_para_spedition: nicht spezifisch genug. \
 Antworte NUR als JSON mit den vier Pflicht-Schlüsseln plus optional empresa_mencionada."""
 
+_AD_CHECK_SYSTEM = """\
+Du bewertest, ob ein LinkedIn-Beitrag wie eine unabhängige, kritische Analyse eines \
+Branchenthemas klingt — oder wie Werbung/PR für ein bestimmtes Unternehmen oder Produkt. \
+Kriterien für "soa_como_ad=true": der Beitrag lobt ein Unternehmen, hebt dessen Produkt/Lösung \
+positiv hervor, oder liest sich wie eine Erfolgsgeschichte/Case Study eines Dritten. \
+Antworte NUR als JSON: {"soa_como_ad": true, "motivo": "Begründung auf Deutsch"} \
+oder {"soa_como_ad": false, "motivo": "Begründung auf Deutsch"}."""
+
 _ART_DIRECTOR_SYSTEM = """\
 You write text-to-image prompts for a clean, professional, editorial LinkedIn header \
 image about the German logistics industry. Given the article topic and the post, produce \
@@ -213,6 +221,21 @@ def evaluate_relevance(article: dict) -> Optional[dict]:
             logger.warning("Relevance parse failed (attempt %d): %s", attempt + 1, raw[:200])
         except Exception as e:
             logger.error("Relevance check error (attempt %d): %s", attempt + 1, e)
+    return None
+
+
+def evaluate_promotional_tone(post_text: str) -> Optional[dict]:
+    """Step 4 (post-generation): flag posts that read as advertising for a third party."""
+    required = ["soa_como_ad", "motivo"]
+    for attempt in range(2):
+        try:
+            raw = _chat(WRITER_MODEL, _AD_CHECK_SYSTEM, post_text)
+            data = _parse_json_obj(raw, required)
+            if data is not None:
+                return data
+            logger.warning("Ad-check parse failed (attempt %d): %s", attempt + 1, raw[:200])
+        except Exception as e:
+            logger.error("Ad-check error (attempt %d): %s", attempt + 1, e)
     return None
 
 
