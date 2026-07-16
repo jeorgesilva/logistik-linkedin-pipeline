@@ -5,7 +5,13 @@ import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Optional
 
-from agents import build_bridge, evaluate_relevance, generate_image_prompt, generate_post
+from agents import (
+    build_bridge,
+    evaluate_promotional_tone,
+    evaluate_relevance,
+    generate_image_prompt,
+    generate_post,
+)
 from db import insert_post, list_posts, source_url_exists, update_post
 from extract import extract_article
 from images import generate_image
@@ -89,6 +95,16 @@ def _process_articles(articles: list[dict]) -> dict:
                 )
                 continue
             logger.info("=== [ETAPA 3 — POST GERADO] ===\n%s", post_text[:400])
+
+            # Etapa 4 — Verificação de tom promocional
+            ad_check = evaluate_promotional_tone(post_text)
+            if ad_check and ad_check.get("soa_como_ad"):
+                logger.info(
+                    "Descartado: tom promocional detectado — '%s' | %s",
+                    art.get("title", "")[:70],
+                    ad_check.get("motivo", "")[:120],
+                )
+                continue
 
             # Todos os filtros passaram — persiste agora
             seed = make_seed(art["source_url"])
