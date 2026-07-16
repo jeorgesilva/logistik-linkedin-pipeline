@@ -11,15 +11,39 @@ logger = logging.getLogger(__name__)
 
 RSS_MAX_PER_FEED = int(os.getenv("RSS_MAX_PER_FEED", "20"))
 
-# Default curated feeds — logistics-focused, verified working.
+# Default curated feeds — DE/EU logistics focus (FreightWaves/TTNews dropped by
+# user decision on 2026-07-16 to keep the list scoped to German/EU logistics).
 # DVZ (dvz.de) and Verkehrs-Rundschau (verkehrsrundschau.de) are behind paywalls
 # and do not expose public RSS; configure via RSS_FEEDS if you have access.
+#
+# Destatis, Bundesnetzagentur, BALM and EUR-Lex are each institution's full
+# press/legislation feed, not pre-filtered to logistics — evaluate_relevance()
+# downstream discards off-topic articles, so expect more noise per run than the
+# narrower trade-press feeds below.
 _DEFAULT_FEEDS: list[dict] = [
-    {"url": "https://www.freightwaves.com/feed", "topic": "FreightWaves"},
-    {"url": "https://www.ttnews.com/rss.xml", "topic": "Transport Topics"},
     {"url": "https://logistik-heute.de/rss.xml", "topic": "Logistik Heute"},
     {"url": "https://www.logistra.de/rss.xml", "topic": "Logistra"},
     {"url": "https://logistik-news24.de/feed", "topic": "Logistik News24"},
+    {
+        "url": "https://www.destatis.de/SiteGlobals/Functions/RSSFeed/DE/RSSNewsfeed/Aktuell.xml?nn=3624",
+        "topic": "Destatis",
+    },
+    {
+        "url": "https://www.bundesnetzagentur.de/SiteGlobals/Functions/RSSFeed/DE/RSSNewsfeed/RSSNewsfeed_Pressemitteilungen.xml?nn=654666",
+        "topic": "Bundesnetzagentur",
+    },
+    {
+        "url": "https://www.balm.bund.de/SiteGlobals/Functions/RSSFeed/rssnewsfeed.xml?nn=539648",
+        "topic": "BALM",
+    },
+    {
+        "url": "https://eur-lex.europa.eu/EN/display-feed.rss?rssId=222",
+        "topic": "EUR-Lex",
+    },
+    {
+        "url": "https://ec.europa.eu/commission/presscorner/api/rss?text=transport",
+        "topic": "DG MOVE",
+    },
 ]
 
 _UA = (
