@@ -1,10 +1,11 @@
-import hashlib
 import logging
 import os
 import time
 from urllib.parse import quote
 
 import requests
+
+from seed_utils import make_seed
 
 logger = logging.getLogger(__name__)
 
@@ -16,11 +17,6 @@ IMAGE_DIR = os.getenv("IMAGE_DIR", "/data/images")
 
 _TIMEOUT = 120
 _BACKOFF = [5, 15, 30]
-
-
-def _make_seed(post_id: int, extra: int = 0) -> int:
-    raw = f"{post_id}-{extra}"
-    return int(hashlib.sha256(raw.encode()).hexdigest(), 16) % (2**31)
 
 
 def generate_image(post_id: int, image_prompt: str, seed: int) -> str:
@@ -52,6 +48,6 @@ def generate_image(post_id: int, image_prompt: str, seed: int) -> str:
 
 def regenerate_image(post_id: int, image_prompt: str, current_seed: int) -> tuple[str, int]:
     """Generate with a new seed. Returns (path, new_seed)."""
-    new_seed = _make_seed(post_id, extra=current_seed + 1)
+    new_seed = make_seed(post_id, current_seed + 1)
     path = generate_image(post_id, image_prompt, new_seed)
     return path, new_seed
