@@ -1,0 +1,19 @@
+name = "logistik-queue"
+main = "src/index.js"
+compatibility_date = "2026-07-16"
+
+[assets]
+directory = "./public/"
+binding = "ASSETS"
+# Only /api/* goes through the Worker script below; every other path (the
+# button page itself) is served directly from ./public/ without invoking it.
+run_worker_first = ["/api/*"]
+
+[[kv_namespaces]]
+binding = "QUEUE_KV"
+# Replace with the ID printed by: wrangler kv namespace create QUEUE_KV
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+
+# QUEUE_SHARED_SECRET is NOT set here on purpose — secrets must not be
+# committed to wrangler.toml. Set it after deploying with:
+#   wrangler secret put QUEUE_SHARED_SECRET

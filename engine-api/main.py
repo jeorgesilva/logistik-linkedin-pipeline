@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 from contextlib import asynccontextmanager
 from typing import Optional
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 import db
@@ -14,11 +17,14 @@ from agents import build_bridge, generate_post
 from extract import extract_article
 from images import regenerate_image
 from pipeline import collect_articles, regenerate_missing_texts, run_batch
+from queue_poller import poll_loop
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
 )
+
+IMAGE_DIR = os.getenv("IMAGE_DIR", "/data/images")
 
 
 @asynccontextmanager
@@ -30,10 +36,34 @@ async def lifespan(app: FastAPI):
     logging.getLogger(__name__).info(
         "Style guide ingested on startup: %d chunks", result.get("ingested", 0)
     )
+
+    # Offline-friendly queue poller — no-op unless QUEUE_WORKER_URL/
+    # QUEUE_SHARED_SECRET are set (see cloudflare-worker/README.md).
+    poller_task = asyncio.create_task(poll_loop())
     yield
+    poller_task.cancel()
 
 
 app = FastAPI(title="Logistik LinkedIn Pipeline API", lifespan=lifespan)
+
+# CORS — needed because the dashboard (cloudflare-dashboard/) is a static
+# site on a different origin than this API. Empty by default (no cross-origin
+# access) until CORS_ALLOWED_ORIGINS is set, e.g.:
+#   CORS_ALLOWED_ORIGINS=https://dashboard.yourdomain.com
+_cors_origins = [o.strip() for o in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if o.strip()]
+if _cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_cors_origins,
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+# Serve generated images over HTTP so a browser on another origin can load
+# them — the dashboard builds URLs as {API_BASE}/images/{post_id}.jpg.
+os.makedirs(IMAGE_DIR, exist_ok=True)
+app.mount("/images", StaticFiles(directory=IMAGE_DIR), name="images")
 
 
 # ---------- Models ----------

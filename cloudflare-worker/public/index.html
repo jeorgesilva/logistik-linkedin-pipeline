@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Logistik LinkedIn — Gerar Posts</title>
+<style>
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    max-width: 480px;
+    margin: 80px auto;
+    text-align: center;
+    color: #1f2933;
+    padding: 0 20px;
+  }
+  button {
+    font-size: 1.1rem;
+    padding: 14px 28px;
+    border-radius: 8px;
+    border: none;
+    background: #0a66c2;
+    color: #fff;
+    cursor: pointer;
+  }
+  button:disabled { background: #9fb3c8; cursor: not-allowed; }
+  #status {
+    margin-top: 24px;
+    font-size: 0.95rem;
+    color: #52606d;
+    white-space: pre-line;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+  <h1>📦 Gerar posts do dia</h1>
+  <p>Clique para pedir uma nova rodada de posts. Se o computador que roda o
+  sistema estiver desligado, o pedido fica registrado aqui e é processado
+  automaticamente assim que ele voltar a ficar online.</p>
+  <button id="btn">🚀 Gerar Posts</button>
+  <div id="status"></div>
+
+<script>
+const btn = document.getElementById("btn");
+const statusEl = document.getElementById("status");
+
+function fmt(iso) {
+  if (!iso) return "";
+  return new Date(iso).toLocaleString("pt-BR");
+}
+
+function render(data) {
+  if (!data || data.status === "idle") {
+    statusEl.textContent = "";
+    btn.disabled = false;
+  } else if (data.status === "pending") {
+    statusEl.textContent =
+      "⏳ Pedido registrado em " + fmt(data.requested_at) +
+      ".\nAguardando o sistema ficar online para processar.";
+    btn.disabled = true;
+  } else if (data.status === "processing") {
+    statusEl.textContent = "⚙️ Processando agora — isso pode levar alguns minutos...";
+    btn.disabled = true;
+  } else if (data.status === "done") {
+    statusEl.textContent =
+      "✅ Pronto! " + (data.result_summary || "") +
+      "\nAbra a fila de revisão para ver os posts.";
+    btn.disabled = false;
+  } else if (data.status === "error") {
+    statusEl.textContent =
+      "⚠️ Algo deu errado na última tentativa: " + (data.result_summary || "") +
+      "\nPode tentar de novo.";
+    btn.disabled = false;
+  }
+}
+
+async function refreshStatus() {
+  try {
+    const res = await fetch("/api/status");
+    const data = await res.json();
+    render(data);
+  } catch (e) {
+    // Worker itself unreachable (rare) — leave button usable, just don't update status.
+  }
+}
+
+btn.addEventListener("click", async () => {
+  btn.disabled = true;
+  statusEl.textContent = "Enviando pedido...";
+  try {
+    const res = await fetch("/api/request", { method: "POST" });
+    const data = await res.json();
+    render(data);
+  } catch (e) {
+    statusEl.textContent = "⚠️ Não consegui enviar o pedido. Tente novamente.";
+    btn.disabled = false;
+  }
+});
+
+refreshStatus();
+setInterval(refreshStatus, 8000);
+</script>
+</body>
+</html>
