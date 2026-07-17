@@ -197,6 +197,13 @@ def _build_kb_context(article: dict) -> str:
             for g in context["guidelines"]:
                 label = g.get("section") or g.get("source", "")
                 parts.append(f"[{label}]\n{g['text']}")
+        if context.get("rejected"):
+            parts.append("=== ABGELEHNTE POSTS — DIESES MUSTER VERMEIDEN ===")
+            for i, rex in enumerate(context["rejected"], 1):
+                parts.append(
+                    f"Abgelehntes Beispiel {i} — {rex['title']} "
+                    f"(Ablehnungsgrund: {rex['reason']}):\n{rex['post_text']}"
+                )
         if context.get("examples"):
             parts.append("=== BEISPIELE GENEHMIGTER POSTS ===")
             for i, ex in enumerate(context["examples"], 1):

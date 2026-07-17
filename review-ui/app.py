@@ -180,8 +180,7 @@ for post in all_posts:
 
             with btn_col3:
                 if st.button("❌ Reject", key=f"reject_{pid}"):
-                    api_patch(f"/posts/{pid}", {"status": "rejected"})
-                    st.warning("Abgelehnt.")
+                    st.session_state[f"rejecting_{pid}"] = True
                     st.rerun()
 
             with btn_col4:
@@ -194,4 +193,28 @@ for post in all_posts:
                 if post.get("status") == "rejected":
                     if st.button("↩️ Restore", key=f"restore_{pid}"):
                         api_patch(f"/posts/{pid}", {"status": "draft"})
+                        st.rerun()
+
+            if st.session_state.get(f"rejecting_{pid}"):
+                st.markdown("**Warum wird dieser Post abgelehnt?** (Pflichtfeld — bitte konkret, nicht generisch)")
+                reason = st.text_area(
+                    "Ablehnungsgrund",
+                    key=f"reject_reason_{pid}",
+                    height=80,
+                    label_visibility="collapsed",
+                )
+                reason_col1, reason_col2 = st.columns(2)
+                with reason_col1:
+                    if st.button("Ablehnung bestätigen", key=f"confirm_reject_{pid}", type="primary"):
+                        if reason.strip():
+                            result = api_post(f"/posts/{pid}/reject", {"reason": reason.strip()})
+                            if result:
+                                del st.session_state[f"rejecting_{pid}"]
+                                st.warning("Abgelehnt.")
+                                st.rerun()
+                        else:
+                            st.error("Bitte einen Grund angeben — Pflichtfeld.")
+                with reason_col2:
+                    if st.button("Abbrechen", key=f"cancel_reject_{pid}"):
+                        del st.session_state[f"rejecting_{pid}"]
                         st.rerun()

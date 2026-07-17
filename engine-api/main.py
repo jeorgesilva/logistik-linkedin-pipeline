@@ -93,6 +93,10 @@ class PostUpdate(BaseModel):
     linkedin_urn: Optional[str] = None
 
 
+class PostReject(BaseModel):
+    reason: str
+
+
 class RunRequest(BaseModel):
     keywords: Optional[list[str]] = None
     max: Optional[int] = None
@@ -164,6 +168,32 @@ def patch_post(post_id: int, req: PostUpdate):
             )
 
     return updated
+
+
+@app.post("/posts/{post_id}/reject")
+def reject_post(post_id: int, req: PostReject):
+    reason = req.reason.strip()
+    if not reason:
+        raise HTTPException(status_code=400, detail="reason must not be empty")
+
+    post = db.get_post(post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    db.update_post(post_id, status="rejected")
+    db.add_feedback(post_id, reason)
+
+    post_text = post.get("post_text", "")
+    if post_text:
+        kb.ingest_rejected_post(
+            post_id=post_id,
+            topic=post.get("topic", ""),
+            title=post.get("title", ""),
+            post_text=post_text,
+            reason=reason,
+        )
+
+    return db.get_post(post_id)
 
 
 def _regenerate_text_task(post_id: int) -> None:

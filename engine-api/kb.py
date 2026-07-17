@@ -14,6 +14,7 @@ OLLAMA_HOST = os.getenv("OLLAMA_EMBED_HOST", os.getenv("OLLAMA_HOST", "http://ol
 EMBED_MODEL = os.getenv("EMBED_MODEL", "nomic-embed-text")
 KB_PATH = os.getenv("KB_PATH", "/data/chroma")
 KB_MIN_EXAMPLES = int(os.getenv("KB_MIN_EXAMPLES", "3"))
+KB_MIN_REJECTED = int(os.getenv("KB_MIN_REJECTED", "3"))
 STYLE_GUIDE_PATH = os.getenv("STYLE_GUIDE_PATH", "/data/style_guide")
 
 _EMBED_TIMEOUT = 60
@@ -21,16 +22,18 @@ _EMBED_TIMEOUT = 60
 _client: Optional[chromadb.PersistentClient] = None
 _examples_col = None
 _guidelines_col = None
+_rejected_col = None
 
 
 def _get_collections():
-    global _client, _examples_col, _guidelines_col
+    global _client, _examples_col, _guidelines_col, _rejected_col
     if _client is None:
         os.makedirs(KB_PATH, exist_ok=True)
         _client = chromadb.PersistentClient(path=KB_PATH)
         _examples_col = _client.get_or_create_collection("style_examples")
         _guidelines_col = _client.get_or_create_collection("style_guidelines")
-    return _examples_col, _guidelines_col
+        _rejected_col = _client.get_or_create_collection("rejected_examples")
+    return _examples_col, _guidelines_col, _rejected_col
 
 
 def embed(text: str) -> list[float]:
@@ -45,7 +48,7 @@ def embed(text: str) -> list[float]:
 
 def ingest_post(post_id: int, topic: str, title: str, post_text: str) -> bool:
     try:
-        ex_col, _ = _get_collections()
+        ex_col, _, _ = _get_collections()
         doc_id = f"post_{post_id}"
         query_text = f"{title}\n\n{post_text}"
         embedding = embed(query_text)
@@ -62,9 +65,28 @@ def ingest_post(post_id: int, topic: str, title: str, post_text: str) -> bool:
         return False
 
 
+def ingest_rejected_post(post_id: int, topic: str, title: str, post_text: str, reason: str) -> bool:
+    try:
+        _, _, rej_col = _get_collections()
+        doc_id = f"post_{post_id}"
+        query_text = f"{title}\n\n{post_text}"
+        embedding = embed(query_text)
+        rej_col.upsert(
+            ids=[doc_id],
+            embeddings=[embedding],
+            documents=[post_text],
+            metadatas=[{"post_id": post_id, "topic": topic, "title": title, "reason": reason}],
+        )
+        logger.info("Ingested rejected post %d into rejected_examples KB", post_id)
+        return True
+    except Exception as e:
+        logger.error("Failed to ingest rejected post %d into KB: %s", post_id, e)
+        return False
+
+
 def ingest_guideline(doc_id: str, text: str, metadata: dict) -> bool:
     try:
-        _, gu_col = _get_collections()
+        _, gu_col, _ = _get_collections()
         embedding = embed(text)
         gu_col.upsert(
             ids=[doc_id],
@@ -83,14 +105,16 @@ def retrieve_for_article(
     article_text: str,
     n_examples: int = 2,
     n_guidelines: int = 2,
+    n_rejected: int = 2,
 ) -> dict:
-    """Return {examples: [...], guidelines: [...]} for injection into the LLM prompt.
+    """Return {examples: [...], guidelines: [...], rejected: [...]} for injection into the LLM prompt.
 
-    Returns empty lists if KB has fewer than KB_MIN_EXAMPLES approved posts,
-    or if Ollama / ChromaDB is unavailable — pipeline continues unaffected.
+    Returns empty lists if KB has fewer than KB_MIN_EXAMPLES approved posts (or fewer than
+    KB_MIN_REJECTED rejected posts, for the `rejected` list specifically), or if Ollama / ChromaDB
+    is unavailable — pipeline continues unaffected.
     """
     try:
-        ex_col, gu_col = _get_collections()
+        ex_col, gu_col, rej_col = _get_collections()
 
         ex_count = ex_col.count()
         if ex_count < KB_MIN_EXAMPLES:
@@ -99,7 +123,7 @@ def retrieve_for_article(
                 ex_count,
                 KB_MIN_EXAMPLES,
             )
-            return {"examples": [], "guidelines": []}
+            return {"examples": [], "guidelines": [], "rejected": []}
 
         query_embedding = embed(article_text[:500])
 
@@ -123,31 +147,55 @@ def retrieve_for_article(
             for doc, meta in zip(results["documents"][0], results["metadatas"][0]):
                 guidelines.append({"source": meta.get("source", ""), "section": meta.get("section", ""), "text": doc})
 
-        logger.debug("KB retrieved %d examples, %d guideline chunks", len(examples), len(guidelines))
-        return {"examples": examples, "guidelines": guidelines}
+        rejected = []
+        rej_count = rej_col.count()
+        if rej_count >= KB_MIN_REJECTED:
+            results = rej_col.query(
+                query_embeddings=[query_embedding],
+                n_results=min(n_rejected, rej_count),
+                include=["documents", "metadatas"],
+            )
+            for doc, meta in zip(results["documents"][0], results["metadatas"][0]):
+                rejected.append({
+                    "title": meta.get("title", ""),
+                    "post_text": doc,
+                    "reason": meta.get("reason", ""),
+                })
+
+        logger.debug(
+            "KB retrieved %d examples, %d guideline chunks, %d rejected examples",
+            len(examples), len(guidelines), len(rejected),
+        )
+        return {"examples": examples, "guidelines": guidelines, "rejected": rejected}
 
     except Exception as e:
         logger.error("KB retrieval failed (pipeline continues without RAG): %s", e)
-        return {"examples": [], "guidelines": []}
+        return {"examples": [], "guidelines": [], "rejected": []}
 
 
 def get_stats() -> dict:
     try:
-        ex_col, gu_col = _get_collections()
+        ex_col, gu_col, rej_col = _get_collections()
         n_examples = ex_col.count()
+        n_rejected = rej_col.count()
         return {
             "style_examples": n_examples,
             "style_guidelines": gu_col.count(),
+            "rejected_examples": n_rejected,
             "kb_path": KB_PATH,
             "min_examples_for_rag": KB_MIN_EXAMPLES,
+            "min_rejected_for_rag": KB_MIN_REJECTED,
             "rag_active": n_examples >= KB_MIN_EXAMPLES,
+            "rejected_rag_active": n_rejected >= KB_MIN_REJECTED,
         }
     except Exception as e:
         logger.error("KB stats failed: %s", e)
         return {
             "style_examples": 0,
             "style_guidelines": 0,
+            "rejected_examples": 0,
             "rag_active": False,
+            "rejected_rag_active": False,
             "error": str(e),
         }
 

@@ -23,6 +23,16 @@ CREATE TABLE IF NOT EXISTS posts (
 );
 """
 
+_CREATE_FEEDBACK_TABLE = """
+CREATE TABLE IF NOT EXISTS post_feedback (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  post_id       INTEGER NOT NULL,
+  reason        TEXT NOT NULL,
+  created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (post_id) REFERENCES posts(id)
+);
+"""
+
 
 @contextmanager
 def _conn():
@@ -42,6 +52,7 @@ def _conn():
 def init_db():
     with _conn() as con:
         con.execute(_CREATE_TABLE)
+        con.execute(_CREATE_FEEDBACK_TABLE)
 
 
 def insert_post(
@@ -101,3 +112,12 @@ def update_post(post_id: int, **fields) -> bool:
     with _conn() as con:
         con.execute(f"UPDATE posts SET {set_clause} WHERE id = ?", values)
     return True
+
+
+def add_feedback(post_id: int, reason: str) -> int:
+    with _conn() as con:
+        cur = con.execute(
+            "INSERT INTO post_feedback (post_id, reason) VALUES (?, ?)",
+            (post_id, reason),
+        )
+        return cur.lastrowid
