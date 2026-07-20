@@ -18,6 +18,7 @@ from extract import extract_article
 from images import regenerate_image
 from pipeline import collect_articles, regenerate_missing_texts, run_batch
 from queue_poller import poll_loop
+from tunnel_reporter import report_loop
 
 logging.basicConfig(
     level=logging.INFO,
@@ -40,8 +41,12 @@ async def lifespan(app: FastAPI):
     # Offline-friendly queue poller — no-op unless QUEUE_WORKER_URL/
     # QUEUE_SHARED_SECRET are set (see cloudflare-worker/README.md).
     poller_task = asyncio.create_task(poll_loop())
+    # Publishes the current Quick Tunnel URL so cloudflare-dashboard can
+    # auto-discover it — no-op if cloudflared isn't in Quick Tunnel mode.
+    tunnel_reporter_task = asyncio.create_task(report_loop())
     yield
     poller_task.cancel()
+    tunnel_reporter_task.cancel()
 
 
 app = FastAPI(title="Logistik LinkedIn Pipeline API", lifespan=lifespan)
