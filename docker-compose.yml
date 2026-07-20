@@ -113,7 +113,11 @@ services:
     # cloudflare-dashboard needs); review-ui/n8n stay localhost-only.
     # Superseded the previous named/token tunnel (CLOUDFLARE_TUNNEL_TOKEN in
     # .env is no longer read by this command, left in place unused).
-    command: tunnel --url http://engine-api:8000
+    # --protocol http2: QUIC (the default) fails to hold a stable control
+    # stream over Colima's network on this machine (constant "control stream
+    # encountered a failure" / QUIC handshake timeouts in `docker logs
+    # cloudflared`). HTTP/2 is TCP-based and works reliably here instead.
+    command: tunnel --protocol http2 --url http://engine-api:8000
     depends_on:
       engine-api:
         condition: service_healthy

@@ -15,6 +15,7 @@ from agents import (
 from db import insert_post, list_posts, source_url_exists, update_post
 from extract import extract_article
 from images import generate_image
+import pipeline_status
 from rank import dedup_and_rank
 from rss import fetch_rss_feeds
 from seed_utils import make_seed
@@ -31,8 +32,8 @@ def collect_articles(
 ) -> list[dict]:
     """Fetch headlines from RSS feeds and return top N deduplicated articles.
 
-    Full article text is NOT fetched here — that happens in _process_articles,
-    only for articles that pass the relevance filter (Etapa 1).
+    Used by the /collect debug endpoint (preview only, doesn't run the funnel).
+    run_batch uses _collect_deduped_pool() instead — see its docstring for why.
     """
     n = max_articles or MAX_ARTICLES
     raw = fetch_rss_feeds()
@@ -41,111 +42,177 @@ def collect_articles(
     return selected
 
 
-def _process_articles(articles: list[dict]) -> dict:
+def _collect_deduped_pool() -> list[dict]:
+    """Fetch RSS feeds and dedup the *entire* pool, uncapped.
+
+    run_batch walks this pool until `target_relevant` articles have passed
+    the relevance filter (Etapa 1), instead of the old behaviour of capping
+    the candidate list to MAX_ARTICLES upfront — that meant a run could
+    select 10 candidates, watch most get discarded by Etapa 1, and finish
+    with 0 posts even though dozens of untried articles were sitting in the
+    same RSS batch.
+    """
+    raw = fetch_rss_feeds()
+    deduped = dedup_and_rank(raw, top_n=len(raw))
+    logger.info("RSS → dedup: %d → %d unique articles available", len(raw), len(deduped))
+    return deduped
+
+
+def _process_from_relevance(art: dict, rel_motivo: str) -> Optional[int]:
+    """Etapas 2-4 — assumes Etapa 1 (relevância) already passed for `art`."""
+    try:
+        # Full-text extraction — only for articles that passed the filter
+        extraction = extract_article(art["source_url"], art.get("rss_summary", ""))
+        art.update(extraction)
+        logger.info(
+            "Full text extracted: %d chars for '%s'",
+            len(art.get("full_text", "")),
+            art.get("title", "")[:60],
+        )
+
+        # Etapa 2 — Ponte narrativa (runs on full article text)
+        bridge = build_bridge(art, relevance_motivo=rel_motivo)
+        if not bridge:
+            logger.info(
+                "Descartado: bridge inválida ou impacto genérico — '%s'",
+                art.get("title", "")[:70],
+            )
+            return None
+        logger.info(
+            "=== [ETAPA 2 — PONTE] impacto='%s' | risco='%s'",
+            bridge.get("impacto_para_spedition", "")[:100],
+            bridge.get("risco_ou_oportunidade", "")[:80],
+        )
+
+        # Etapa 3 — Geração do post
+        post_text = generate_post(art, bridge=bridge)
+        if not post_text:
+            logger.info(
+                "Descartado: writer retornou vazio — '%s'",
+                art.get("title", "")[:70],
+            )
+            return None
+        logger.info("=== [ETAPA 3 — POST GERADO] ===\n%s", post_text[:400])
+
+        # Etapa 4 — Verificação de tom promocional
+        ad_check = evaluate_promotional_tone(post_text)
+        if ad_check and ad_check.get("soa_como_ad"):
+            logger.info(
+                "Descartado: tom promocional detectado — '%s' | %s",
+                art.get("title", "")[:70],
+                ad_check.get("motivo", "")[:120],
+            )
+            return None
+
+        # Todos os filtros passaram — persiste agora
+        seed = make_seed(art["source_url"])
+        post_id = insert_post(
+            topic=art.get("topic", ""),
+            source_url=art.get("source_url", ""),
+            title=art.get("title", ""),
+            seed=seed,
+            status="candidate",
+        )
+
+        image_prompt = generate_image_prompt(art, post_text)
+        image_path = generate_image(post_id, image_prompt, seed)
+
+        if not image_path and art.get("top_image"):
+            image_path = art["top_image"]
+
+        update_post(
+            post_id,
+            post_text=post_text,
+            image_prompt=image_prompt,
+            image_path=image_path,
+            status="draft",
+        )
+
+        logger.info("Post %d created: %s", post_id, art.get("title", "")[:60])
+        return post_id
+
+    except Exception as e:
+        logger.error("Failed processing article '%s': %s", art.get("title", ""), e)
+        return None
+
+
+def _process_articles(articles: list[dict], target_posts: int) -> dict:
+    """Walk `articles` (already deduped, in feed order) testing Etapa 1 on
+    each one, and keep going — pulling the next candidate from the same
+    pool — until `target_posts` posts have actually been created. Passing
+    Etapa 1 does not by itself count towards the target: Etapas 2-4 are
+    independent quality gates that can still discard the article, and if
+    they do, the search keeps going instead of stopping short.
+    """
     created_ids = []
+    relevant_count = 0
+    scanned = 0
+
     for art in articles:
-        try:
-            if source_url_exists(art["source_url"]):
-                logger.info("Skipping duplicate source_url: %s", art["source_url"][:70])
-                continue
+        if len(created_ids) >= target_posts:
+            break
+        scanned += 1
+        pipeline_status.mark_scanned()
 
-            # Etapa 1 — Filtro de relevância (runs on RSS headline + summary — fast)
-            relevance = evaluate_relevance(art)
-            rel_flag = relevance.get("relevante") if relevance else None
-            rel_motivo = (relevance.get("motivo", "") if relevance else "parse failed")[:150]
-            logger.info(
-                "=== [ETAPA 1 — FILTRO] relevante=%s | %s | '%s'",
-                rel_flag,
-                art.get("title", "")[:60],
-                rel_motivo,
-            )
-            if not relevance or not rel_flag:
-                logger.info("Descartado por irrelevância: %s", art.get("title", "")[:70])
-                continue
-
-            # Full-text extraction — only for articles that passed the filter
-            extraction = extract_article(art["source_url"], art.get("rss_summary", ""))
-            art.update(extraction)
-            logger.info(
-                "Full text extracted: %d chars for '%s'",
-                len(art.get("full_text", "")),
-                art.get("title", "")[:60],
-            )
-
-            # Etapa 2 — Ponte narrativa (runs on full article text)
-            bridge = build_bridge(art, relevance_motivo=rel_motivo)
-            if not bridge:
-                logger.info(
-                    "Descartado: bridge inválida ou impacto genérico — '%s'",
-                    art.get("title", "")[:70],
-                )
-                continue
-            logger.info(
-                "=== [ETAPA 2 — PONTE] impacto='%s' | risco='%s'",
-                bridge.get("impacto_para_spedition", "")[:100],
-                bridge.get("risco_ou_oportunidade", "")[:80],
-            )
-
-            # Etapa 3 — Geração do post
-            post_text = generate_post(art, bridge=bridge)
-            if not post_text:
-                logger.info(
-                    "Descartado: writer retornou vazio — '%s'",
-                    art.get("title", "")[:70],
-                )
-                continue
-            logger.info("=== [ETAPA 3 — POST GERADO] ===\n%s", post_text[:400])
-
-            # Etapa 4 — Verificação de tom promocional
-            ad_check = evaluate_promotional_tone(post_text)
-            if ad_check and ad_check.get("soa_como_ad"):
-                logger.info(
-                    "Descartado: tom promocional detectado — '%s' | %s",
-                    art.get("title", "")[:70],
-                    ad_check.get("motivo", "")[:120],
-                )
-                continue
-
-            # Todos os filtros passaram — persiste agora
-            seed = make_seed(art["source_url"])
-            post_id = insert_post(
-                topic=art.get("topic", ""),
-                source_url=art.get("source_url", ""),
-                title=art.get("title", ""),
-                seed=seed,
-                status="candidate",
-            )
-
-            image_prompt = generate_image_prompt(art, post_text)
-            image_path = generate_image(post_id, image_prompt, seed)
-
-            if not image_path and art.get("top_image"):
-                image_path = art["top_image"]
-
-            update_post(
-                post_id,
-                post_text=post_text,
-                image_prompt=image_prompt,
-                image_path=image_path,
-                status="draft",
-            )
-
-            created_ids.append(post_id)
-            logger.info("Post %d created: %s", post_id, art.get("title", "")[:60])
-
-        except Exception as e:
-            logger.error("Failed processing article '%s': %s", art.get("title", ""), e)
+        if source_url_exists(art["source_url"]):
+            logger.info("Skipping duplicate source_url: %s", art["source_url"][:70])
             continue
 
-    return {"created": len(created_ids), "ids": created_ids}
+        # Etapa 1 — Filtro de relevância (runs on RSS headline + summary — fast)
+        relevance = evaluate_relevance(art)
+        rel_flag = relevance.get("relevante") if relevance else None
+        rel_motivo = (relevance.get("motivo", "") if relevance else "parse failed")[:150]
+        logger.info(
+            "=== [ETAPA 1 — FILTRO] relevante=%s | %s | '%s'",
+            rel_flag,
+            art.get("title", "")[:60],
+            rel_motivo,
+        )
+        if not relevance or not rel_flag:
+            logger.info("Descartado por irrelevância: %s", art.get("title", "")[:70])
+            continue
+
+        relevant_count += 1
+        pipeline_status.mark_relevant()
+
+        post_id = _process_from_relevance(art, rel_motivo)
+        if post_id is not None:
+            created_ids.append(post_id)
+            pipeline_status.mark_post_created()
+
+    if len(created_ids) < target_posts:
+        logger.info(
+            "Pool esgotado antes da meta: %d/%d posts criados (%d artigos relevantes de %d escaneados, %d disponíveis no pool)",
+            len(created_ids),
+            target_posts,
+            relevant_count,
+            scanned,
+            len(articles),
+        )
+
+    return {
+        "created": len(created_ids),
+        "ids": created_ids,
+        "relevant_found": relevant_count,
+        "scanned": scanned,
+    }
 
 
 def run_batch(
     keywords: Optional[list[str]] = None,
     max_articles: Optional[int] = None,
 ) -> dict:
-    articles = collect_articles(keywords, max_articles)
-    return _process_articles(articles)
+    target = max_articles or MAX_ARTICLES
+    try:
+        articles = _collect_deduped_pool()
+        pipeline_status.set_target(target)
+        result = _process_articles(articles, target_posts=target)
+        pipeline_status.finish()
+        return result
+    except Exception as e:
+        logger.error("Pipeline run failed: %s", e)
+        pipeline_status.finish(error=str(e))
+        raise
 
 
 def _regenerate_one(post: dict) -> dict:

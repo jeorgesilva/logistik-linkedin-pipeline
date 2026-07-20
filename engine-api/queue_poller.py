@@ -1,6 +1,6 @@
 """Background poller for the offline-friendly request queue.
 
-Lets a colleague click "Gerar Posts" on the small always-on Cloudflare Worker
+Lets a colleague click "Posts generieren" on the small always-on Cloudflare Worker
 page (cloudflare-worker/) even while this machine is offline. The request
 sits in the Worker's KV store until this poller — which only runs while
 engine-api itself is up — picks it up, runs the pipeline, and reports the

@@ -16,6 +16,7 @@ import kb
 from agents import build_bridge, generate_post
 from extract import extract_article
 from images import regenerate_image
+import pipeline_status
 from pipeline import collect_articles, regenerate_missing_texts, run_batch
 from queue_poller import poll_loop
 from tunnel_reporter import report_loop
@@ -248,10 +249,17 @@ def regenerate_missing_text(background_tasks: BackgroundTasks):
 
 @app.post("/run")
 def run(background_tasks: BackgroundTasks, req: RunRequest = None):
+    if not pipeline_status.start_run():
+        return {"status": "already_running"}
     keywords = req.keywords if req else None
     max_articles = req.max if req else None
     background_tasks.add_task(run_batch, keywords, max_articles)
     return {"status": "started"}
+
+
+@app.get("/pipeline/status")
+def pipeline_status_route():
+    return pipeline_status.get_status()
 
 
 # ---------- Knowledge Base ----------
