@@ -1,5 +1,7 @@
 # 03 — Vocabulary & German Logistics Glossary
 
+*For institutional/self-promotional filler to avoid in opinion posts (e.g. „unsere Mission", „unser Ansatz"), see the dedicated table in `01_tone_and_voice.md` — that's about register, not terminology, so it lives there.*
+
 ## Preferred Vocabulary — LogAid Brand Terms
 
 These are the exact terms used in approved posts. Use these, not paraphrases.
@@ -37,6 +39,15 @@ These are the exact terms used in approved posts. Use these, not paraphrases.
 | „verschwindet" | „geht verloren" |
 | „verbrennt" | „verbraucht" (when describing unsustainable business behavior) |
 | „frisst Stunden" | „kostet Zeit" |
+
+### Stance-taking constructions (for Pattern F / opinion posts)
+
+| Use | Avoid |
+|---|---|
+| „wir sehen das anders" | „man könnte argumentieren, dass" |
+| „das ist kein X-Problem, das ist Y" | „das hängt auch mit X zusammen" |
+| „wir glauben" (followed by a flat claim) | „wir glauben" (followed by a hedge) |
+| „das ist keine Randnotiz — das ist..." | „das sollte man nicht unterschätzen" |
 
 ---
 

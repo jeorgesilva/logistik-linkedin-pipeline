@@ -2,11 +2,12 @@
 
 ## Rules
 
-- **5–7 hashtags per post**, always at the end, never inline
+- **5–7 hashtags per post** for Patterns A–E, always at the end, never inline
+- **Pattern F (Opinion/Market Critique, see `02_post_structure.md`): 3–5 hashtags, brand hashtag optional.** An opinion post doesn't need `#logaid` to justify itself — the belief being defended is the anchor, not the brand tag.
 - German posts use German hashtags; English posts use English hashtags; bilingual posts use both
-- Always include at least one **brand hashtag** (`#logaid` or `#LogAid`)
+- Patterns A–E: always include at least one **brand hashtag** (`#logaid` or `#LogAid`)
 - Always include at least one **broad audience hashtag** (`#Logistik` or `#logistics`)
-- Mix: 2–3 broad reach + 2–3 niche/specific + 1 brand
+- Mix: 2–3 broad reach + 2–3 niche/specific + 1 brand (Patterns A–E)
 
 ---
 
