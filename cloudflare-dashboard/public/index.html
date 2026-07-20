@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Logistik Pipeline — Fila de Revisão</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Onboarding: asks for the engine-api URL once, stored in localStorage -->
+<div id="setup-screen" class="setup-screen">
+  <div class="setup-card">
+    <div class="setup-icon">📦</div>
+    <h1>Logistik Pipeline</h1>
+    <p>Informe o endereço da API (engine-api) para começar.</p>
+    <input id="setup-api-url" type="text" placeholder="https://api.seudominio.com" autocomplete="off" />
+    <button id="setup-save-btn" class="btn btn-primary btn-block">Salvar e continuar</button>
+    <p class="setup-hint">Fica salvo só neste navegador. Dá para trocar depois em Configurações.</p>
+  </div>
+</div>
+
+<div id="main-screen" class="app-shell hidden">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-icon">📦</span>
+      <span class="brand-name">Logistik&nbsp;Pipeline</span>
+    </div>
+
+    <nav class="status-nav" id="status-nav"></nav>
+
+    <div class="sidebar-section">
+      <h3>Ações</h3>
+      <button class="btn btn-primary btn-block" id="btn-run-pipeline">🚀 Rodar Pipeline Agora</button>
+      <button class="btn btn-secondary btn-block" id="btn-gen-missing">✍️ Gerar Textos Faltantes</button>
+      <button class="btn btn-ghost btn-block" id="btn-refresh">🔄 Atualizar</button>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>Knowledge Base</h3>
+      <div id="kb-indicator" class="kb-indicator kb-loading">Carregando…</div>
+      <button class="btn btn-ghost btn-sm btn-block" id="btn-kb-sync">🔗 Sincronizar Aprovados</button>
+      <button class="btn btn-ghost btn-sm btn-block" id="btn-kb-reload">📚 Recarregar Style Guide</button>
+    </div>
+
+    <div class="sidebar-footer">
+      <span id="connection-dot" class="connection-dot" title="Status da conexão com a API"></span>
+      <span id="connection-label" class="connection-label">Conectando…</span>
+      <button class="icon-btn" id="btn-settings" title="Configurações">⚙️</button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <header class="content-header">
+      <h1 id="content-title">Todos os posts</h1>
+      <span id="content-count" class="content-count"></span>
+    </header>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <div id="loading-state" class="loading-state hidden">
+      <div class="spinner"></div>
+      <p>Carregando posts…</p>
+    </div>
+
+    <div id="empty-state" class="empty-state hidden">
+      <div class="empty-icon">🗒️</div>
+      <p>Nenhum post por aqui ainda.</p>
+      <button class="btn btn-primary" id="btn-empty-run">🚀 Rodar Pipeline Agora</button>
+    </div>
+
+    <div id="post-grid" class="post-grid"></div>
+  </main>
+</div>
+
+<div id="drawer-overlay" class="drawer-overlay hidden"></div>
+<aside id="drawer" class="drawer">
+  <div id="drawer-content"></div>
+</aside>
+
+<!-- Settings modal -->
+<div id="settings-overlay" class="drawer-overlay hidden"></div>
+<div id="settings-modal" class="modal hidden">
+  <h2>Configurações</h2>
+  <label class="field-label" for="settings-api-url">Endereço da API</label>
+  <input id="settings-api-url" type="text" placeholder="https://api.seudominio.com" />
+  <div class="modal-actions">
+    <button class="btn btn-ghost" id="settings-cancel-btn">Cancelar</button>
+    <button class="btn btn-primary" id="settings-save-btn">Salvar</button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

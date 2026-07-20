@@ -106,15 +106,15 @@ services:
     image: cloudflare/cloudflared:latest
     container_name: cloudflared
     networks: [pipeline_net]
-    # Remotely-managed tunnel: all routing (hostname → service) is configured
-    # in the Cloudflare Zero Trust dashboard, not in this file. This container
-    # only needs the tunnel token — see CLOUDFLARE_TUNNEL_TOKEN in .env.
-    command: tunnel run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    # Quick Tunnel mode: no Cloudflare zone/domain needed, free. Cloudflare
+    # assigns a random https://*.trycloudflare.com hostname on every start and
+    # prints it to this container's logs (`docker logs cloudflared`) — it is
+    # NOT stable across restarts. Only exposes engine-api (what the
+    # cloudflare-dashboard needs); review-ui/n8n stay localhost-only.
+    # Superseded the previous named/token tunnel (CLOUDFLARE_TUNNEL_TOKEN in
+    # .env is no longer read by this command, left in place unused).
+    command: tunnel --url http://engine-api:8000
     depends_on:
       engine-api:
         condition: service_healthy
-      review-ui:
-        condition: service_started
-      n8n:
-        condition: service_started
     restart: unless-stopped

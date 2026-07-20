@@ -6,6 +6,8 @@
 ## Topic 1: Industry Crisis / Negative News
 *(insolvency wave, freight capacity collapse, carrier failures)*
 
+**Posicionamento aplicável (`06_point_of_view.md`):** crença 4 (preço baixo = sintoma de queima de substância) e crença 7 (crise estrutural, atinge compradores com 6–12 meses de atraso). Um post de opinião sobre este tópico normalmente ancora em uma das duas, ou nas duas combinadas — Pattern F é uma opção tão válida quanto Pattern C/E aqui.
+
 ### Framing principles
 - **Do not editorialize** on the failed companies. Name them, state the facts, move on.
 - **Shift blame to the system**, not individuals: *„nicht weil sie schlechte Unternehmen waren — weil das System um sie herum aufgehört hat zu funktionieren"*
@@ -37,6 +39,8 @@
 ## Topic 2: Market Trend / Industry Data Report
 *(Microsoft AI report, DVZ analysis, Eurostat freight data)*
 
+**Posicionamento aplicável (`06_point_of_view.md`):** crença 1 (comunicação é o custo invisível, o setor olha para o que brilha) e crença 8 (adoção de IA é mais hype do que prática — barreira técnica caiu, falta integração). A maioria dos relatórios de mercado serve para provar uma dessas duas teses, não para ser noticiada neutramente.
+
 ### Framing principles
 - **Source first**: name the report, date, publisher — within the first 2 sentences.
 - **The insight must be reframed** for German Mittelstand logistics specifically. Global data means nothing until it's translated: *„Asien zieht massiv an, sobald die Sprachmodelle in der Landessprache funktionieren. Für deutschsprachige Speditionen heißt das..."*
@@ -60,6 +64,8 @@
 
 ## Topic 3: Regulatory / Political Event
 *(AI model shutdown, DSGVO enforcement, US tech policy affecting German businesses)*
+
+**Posicionamento aplicável (`06_point_of_view.md`):** crença 5 (soberania de dados é gestão de risco, não bandeira política). Este é o tópico onde a linha entre opinião e posição política é mais fina — a crença 5 existe justamente para manter o argumento no terreno operacional.
 
 ### Framing principles
 - **Open with the specific event** — date, what happened, who acted. No opinion yet.
@@ -86,6 +92,8 @@
 ## Topic 4: Product / Capability Showcase
 *(What LogAid actually does, specific automation workflows)*
 
+**Posicionamento aplicável (`06_point_of_view.md`):** crença 2 (sugestão não é automação, é mais um clique) e crença 3 (sistemas de registro documentam, não agem — quem decide é o postfach) e crença 6 (IA genérica entende linguagem, não spedition). Este tópico é o único onde o produto é o protagonista por definição — mas ainda deve ser ancorado numa dessas crenças, não apenas descrito.
+
 ### Framing principles
 - **Show the specific workflow**, not the category: *„Statusabfragen, ETA-Updates, Rückfragen aus dem Postfach, Stammdatenpflege"* — not *„administrative tasks"*.
 - **Quantify the problem first**: *„Hunderte von E-Mails täglich. Manuell. Kopiert von Disponenten, die bereits die meist belasteten Menschen im Gebäude sind."*
@@ -110,6 +118,8 @@
 ## Topic 5: Aviation / Infrastructure Logistics
 *(Helicopter operations, power line construction, remote area projects)*
 
+**Posicionamento aplicável (`06_point_of_view.md`):** nenhuma, por design. Este tópico constrói credibilidade operacional, não argumenta uma tese — não force uma crença aqui.
+
 ### Framing principles
 - **Dramatic contrast** as opener: *„Wenn konventionelle Methoden an ihre Grenzen stoßen... fliegen wir weiter."*
 - **Three-quality format** with emojis (🛠️ Effizient / 🛡️ Sicher / 🌱 Minimalinvasiv) — proven structure.
@@ -128,10 +138,10 @@
 
 ## Quick Reference: Tone by Topic
 
-| Topic | Urgency | Formality | LogAid prominence | Aphorism? |
-|---|---|---|---|---|
-| Crisis / Insolvency | High | Medium | Low-medium | Yes — required |
-| Market Data | Medium | Medium | Medium | Optional |
-| Regulatory Event | Medium-high | High | Low (architecture only) | Yes — required |
-| Product Showcase | Medium | Low-medium | High | Optional |
-| Aviation/Infrastructure | Low | Medium | None | No |
+| Topic | Urgency | Formality | LogAid prominence | Aphorism? | Crença(s) aplicável(is) |
+|---|---|---|---|---|---|
+| Crisis / Insolvency | High | Medium | Low-medium, or none in Pattern F | Yes — required | 4, 7 |
+| Market Data | Medium | Medium | Medium, or none in Pattern F | Optional | 1, 8 |
+| Regulatory Event | Medium-high | High | Low (architecture only), or none in Pattern F | Yes — required | 5 |
+| Product Showcase | Medium | Low-medium | High | Optional | 2, 3, 6 |
+| Aviation/Infrastructure | Low | Medium | None | No | — |

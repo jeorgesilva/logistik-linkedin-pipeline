@@ -1,6 +1,8 @@
 # 02 — Post Structure Templates
 
-Every LogAid post follows one of five structural patterns. Choose the pattern before writing a single word.
+Every LogAid post follows one of six structural patterns. Choose the pattern before writing a single word.
+
+**First decision: is this content marketing or opinion?** Patterns A–E are useful when the post's job is to inform (a report, an event, a capability). Pattern F is different in kind, not just in topic — it exists to argue a position from `06_point_of_view.md`. When in doubt, default to F: it produces posts that sound less like brand content and more like someone with a stake in the industry saying what they think.
 
 ---
 
@@ -135,14 +137,49 @@ Every LogAid post follows one of five structural patterns. Choose the pattern be
 
 ---
 
+## Pattern F — Opinion / Market Critique
+*Use for: taking a public position on how the market operates, a trend, a widely-repeated claim, or conventional wisdom LogAid disagrees with. This is the default pattern for posts whose main job is opinion, not information.*
+
+```
+[The contested question or claim — stated plainly, as something a chunk of the market believes or does]
+
+[Why that's wrong, incomplete, or misleading — 2–4 sentences, prose, no bullets]
+
+[The belief from 06_point_of_view.md being defended, stated as a flat claim]
+
+[Evidence or first-hand grounding — a number, a named event, an operational detail that makes the claim earned rather than asserted]
+
+[Optional: what the smart alternative looks like — category-level, not necessarily LogAid]
+
+[Optional, only if earned: LogAid as the practical consequence of the belief — may be entirely absent]
+
+[No CTA required. If one exists, it invites discussion, not a demo.]
+
+[Hashtags — 3–5, brand hashtag optional]
+```
+
+**Annotated example (built from a real published post):**
+> *„17,8 % der arbeitsfähigen Weltbevölkerung nutzt KI. In deutschen Dispoabteilungen? Vermutlich deutlich weniger."*
+> ← Opens on the contested question: is the industry actually adopting AI, or just talking about it.
+
+> *„Asien zieht massiv an, sobald die Sprachmodelle in der Landessprache funktionieren... die technische Barriere ist gefallen. Was fehlt, ist die operative Integration."*
+> ← This is belief #8 from the point-of-view bank, applied to this specific report.
+
+> *„Wer jetzt nicht in produktive KI-Anwendungen geht, fällt nicht morgen zurück — sondern hat es bereits."*
+> ← Closing aphorism carries the opinion. No CTA needed to make the point land.
+
+**Rule for this pattern:** Default to prose, not bullets. Opinion reads as argument, not as a scannable feature list — save `→` bullets and emoji-tagged lists for Patterns A–C where they're doing real work (data points, warning signals). A Pattern F post with five bulleted takeaways has drifted back into content marketing.
+
+---
+
 ## Universal Structural Rules
 
 | Element | Rule |
 |---|---|
 | **Hook (line 1)** | Must work as a standalone sentence when pulled out of context. Test: would someone screenshot just this line? |
 | **Paragraph length** | Maximum 3 sentences per paragraph on LinkedIn. Prefer 1–2. |
-| **Bullets** | Use `→` for actionable items. Use emoji (🛠️🛡️🌱📈) for benefit/feature lists. Never mix the two in one post. |
-| **LogAid mention** | Appears once. Never twice. Never in the first third of the post. |
-| **Closing aphorism** | Optional but powerful. One sentence. Subject-verb-object. No subordinate clauses. |
-| **CTA** | One per post, maximum. Link goes on its own line. |
-| **Hashtags** | 5–7. On their own line(s) at the end. Never inline mid-sentence. |
+| **Bullets** | Use `→` for actionable items. Use emoji (🛠️🛡️🌱📈) for benefit/feature lists. Never mix the two in one post. Default to prose (no bullets) in Pattern F. |
+| **LogAid mention** | Optional. In Patterns A–E, appears at most once, never twice, never in the first third. In Pattern F, may be absent entirely — the belief being defended must be what justifies the mention, not the post's obligation to reference the product. |
+| **Closing aphorism** | Optional but powerful. One sentence. Subject-verb-object. No subordinate clauses. In Pattern F, this is often the whole payoff — the post can end here with no product mention and no CTA. |
+| **CTA** | Optional, maximum one per post. In Patterns A–C, usually a link to deeper content. In Pattern F, prefer none, or a low-key invitation to disagree in the comments rather than a link. |
+| **Hashtags** | 5–7 in Patterns A–E. 3–5 in Pattern F, brand hashtag (`#logaid`) optional. On their own line(s) at the end. Never inline mid-sentence. |

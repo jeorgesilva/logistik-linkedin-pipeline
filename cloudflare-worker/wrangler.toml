@@ -11,8 +11,7 @@ run_worker_first = ["/api/*"]
 
 [[kv_namespaces]]
 binding = "QUEUE_KV"
-# Replace with the ID printed by: wrangler kv namespace create QUEUE_KV
-id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+id = "f0de75dee89b4307b2f74b51fa11714b"
 
 # QUEUE_SHARED_SECRET is NOT set here on purpose — secrets must not be
 # committed to wrangler.toml. Set it after deploying with:
