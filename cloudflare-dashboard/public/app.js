@@ -5,6 +5,12 @@
  */
 
 const STORAGE_KEY = "logistik_api_base_url";
+// engine-api runs behind a free Cloudflare Quick Tunnel whose URL changes on
+// every restart. This Worker (already used for the "Gerar Posts" queue) also
+// stores the current one in KV — tunnel_reporter.py (engine-api) keeps it
+// updated. Auto-discovering it here means the link people are given for this
+// dashboard never needs to change, even though the real API URL behind it does.
+const QUEUE_WORKER_URL = "https://logistik-queue.jeorgecassil.workers.dev";
 const STATUS_FILTERS = [
   { key: "all", label: "Todos" },
   { key: "draft", label: "Rascunho" },
@@ -32,6 +38,20 @@ function getApiBase() {
 
 function setApiBase(url) {
   localStorage.setItem(STORAGE_KEY, url.replace(/\/+$/, ""));
+}
+
+// Best-effort auto-discovery of the current engine-api URL — falls back to
+// whatever's already in localStorage (or the manual setup screen) if the
+// Worker is unreachable or hasn't heard from tunnel_reporter.py yet.
+async function discoverApiBase() {
+  try {
+    const res = await fetch(`${QUEUE_WORKER_URL}/api/tunnel-url`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.url || null;
+  } catch (_) {
+    return null;
+  }
 }
 
 // ---------- Fetch helpers ----------
@@ -558,6 +578,9 @@ function wireStaticControls() {
 }
 
 async function boot() {
+  const discovered = await discoverApiBase();
+  if (discovered) setApiBase(discovered);
+
   if (!getApiBase()) {
     showSetupScreen();
     return;

@@ -11,9 +11,17 @@
  * Only one request is tracked at a time (KV_KEY below) — this is meant for
  * "one colleague, occasional clicks", not a real multi-job queue. If that
  * ever changes, swap the single KV key for a D1 table.
+ *
+ * Also doubles as a directory for engine-api's current public URL: the
+ * machine running engine-api sits behind a free Cloudflare Quick Tunnel,
+ * whose hostname is randomly regenerated on every restart. tunnel_reporter.py
+ * (engine-api) pushes the current one here whenever it changes; the
+ * cloudflare-dashboard fetches it on load instead of requiring a human to
+ * paste a fresh URL in by hand each time.
  */
 
 const KV_KEY = "latest_request";
+const TUNNEL_KV_KEY = "current_tunnel_url";
 
 export default {
   async fetch(request, env) {
@@ -33,6 +41,13 @@ export default {
     if (path === "/api/complete" && request.method === "POST") {
       if (!isAuthorized(request, env)) return unauthorized();
       return handleComplete(request, env);
+    }
+    if (path === "/api/tunnel-url" && request.method === "GET") {
+      return handleGetTunnelUrl(env);
+    }
+    if (path === "/api/tunnel-url" && request.method === "POST") {
+      if (!isAuthorized(request, env)) return unauthorized();
+      return handleSetTunnelUrl(request, env);
     }
 
     return new Response("Not found", { status: 404 });
@@ -117,5 +132,40 @@ async function handleComplete(request, env) {
     result_summary: body.result_summary || "",
   };
   await env.QUEUE_KV.put(KV_KEY, JSON.stringify(record));
+  return json({ ok: true });
+}
+
+// GET /api/tunnel-url — polled by cloudflare-dashboard on load to find the
+// current engine-api URL. Public: the URL itself isn't a secret, it's what
+// the dashboard needs to even start talking to the API. Called cross-origin
+// (from logistik-dashboard's own origin), so needs an explicit CORS header —
+// unlike /api/request and /api/status, which the button page itself calls
+// same-origin, and /api/pending and /api/complete, which engine-api calls
+// server-side (no browser, no CORS involved).
+async function handleGetTunnelUrl(env) {
+  const url = await env.QUEUE_KV.get(TUNNEL_KV_KEY);
+  return new Response(JSON.stringify({ url: url || null }), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+    },
+  });
+}
+
+// POST /api/tunnel-url — reported by engine-api's tunnel_reporter.py
+// whenever the Quick Tunnel hostname changes (secret-protected, same trust
+// level as /api/pending and /api/complete).
+async function handleSetTunnelUrl(request, env) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "invalid JSON body" }, 400);
+  }
+  if (!body.url || typeof body.url !== "string") {
+    return json({ error: "missing url" }, 400);
+  }
+  await env.QUEUE_KV.put(TUNNEL_KV_KEY, body.url);
   return json({ ok: true });
 }
