@@ -1,7 +1,7 @@
 /**
  * Logistik LinkedIn Pipeline — offline-friendly request queue.
  *
- * Lets a colleague click "Gerar Posts" on a page that is always online
+ * Lets a colleague click "Posts generieren" on a page that is always online
  * (this Worker), even while the machine that actually runs the pipeline
  * (engine-api + Ollama, on someone's computer) is turned off. The click is
  * stored here in KV as a single pending record; engine-api's queue_poller.py

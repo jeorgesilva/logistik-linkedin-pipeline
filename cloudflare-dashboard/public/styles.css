@@ -268,7 +268,22 @@ button { font-family: inherit; }
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
+.spinner.spinner-sm { width: 16px; height: 16px; border-width: 2px; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+.pipeline-status-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--primary-light, #EEF2FF);
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 18px;
+}
 
 /* ---------- Post grid & cards ---------- */
 .post-grid {

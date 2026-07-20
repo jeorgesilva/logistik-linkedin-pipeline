@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="de">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Logistik LinkedIn — Gerar Posts</title>
+<title>Logistik LinkedIn — Posts generieren</title>
 <style>
   body {
     font-family: system-ui, -apple-system, sans-serif;
@@ -33,11 +33,11 @@
 </style>
 </head>
 <body>
-  <h1>📦 Gerar posts do dia</h1>
-  <p>Clique para pedir uma nova rodada de posts. Se o computador que roda o
-  sistema estiver desligado, o pedido fica registrado aqui e é processado
-  automaticamente assim que ele voltar a ficar online.</p>
-  <button id="btn">🚀 Gerar Posts</button>
+  <h1>📦 Tagesposts generieren</h1>
+  <p>Klicke, um eine neue Runde Posts anzufordern. Wenn der Computer, auf dem
+  das System läuft, ausgeschaltet ist, wird die Anfrage hier gespeichert und
+  automatisch verarbeitet, sobald er wieder online ist.</p>
+  <button id="btn">🚀 Posts generieren</button>
   <div id="status"></div>
 
 <script>
@@ -46,7 +46,7 @@ const statusEl = document.getElementById("status");
 
 function fmt(iso) {
   if (!iso) return "";
-  return new Date(iso).toLocaleString("pt-BR");
+  return new Date(iso).toLocaleString("de-DE");
 }
 
 function render(data) {
@@ -55,21 +55,21 @@ function render(data) {
     btn.disabled = false;
   } else if (data.status === "pending") {
     statusEl.textContent =
-      "⏳ Pedido registrado em " + fmt(data.requested_at) +
-      ".\nAguardando o sistema ficar online para processar.";
+      "⏳ Anfrage registriert am " + fmt(data.requested_at) +
+      ".\nWartet darauf, dass das System online geht, um verarbeitet zu werden.";
     btn.disabled = true;
   } else if (data.status === "processing") {
-    statusEl.textContent = "⚙️ Processando agora — isso pode levar alguns minutos...";
+    statusEl.textContent = "⚙️ Wird gerade verarbeitet — das kann einige Minuten dauern...";
     btn.disabled = true;
   } else if (data.status === "done") {
     statusEl.textContent =
-      "✅ Pronto! " + (data.result_summary || "") +
-      "\nAbra a fila de revisão para ver os posts.";
+      "✅ Fertig! " + (data.result_summary || "") +
+      "\nÖffne die Freigabe-Warteschlange, um die Posts zu sehen.";
     btn.disabled = false;
   } else if (data.status === "error") {
     statusEl.textContent =
-      "⚠️ Algo deu errado na última tentativa: " + (data.result_summary || "") +
-      "\nPode tentar de novo.";
+      "⚠️ Beim letzten Versuch ist etwas schiefgelaufen: " + (data.result_summary || "") +
+      "\nDu kannst es erneut versuchen.";
     btn.disabled = false;
   }
 }
@@ -86,13 +86,13 @@ async function refreshStatus() {
 
 btn.addEventListener("click", async () => {
   btn.disabled = true;
-  statusEl.textContent = "Enviando pedido...";
+  statusEl.textContent = "Anfrage wird gesendet...";
   try {
     const res = await fetch("/api/request", { method: "POST" });
     const data = await res.json();
     render(data);
   } catch (e) {
-    statusEl.textContent = "⚠️ Não consegui enviar o pedido. Tente novamente.";
+    statusEl.textContent = "⚠️ Anfrage konnte nicht gesendet werden. Bitte erneut versuchen.";
     btn.disabled = false;
   }
 });
