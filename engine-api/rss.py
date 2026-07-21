@@ -17,14 +17,38 @@ RSS_MAX_PER_FEED = int(os.getenv("RSS_MAX_PER_FEED", "20"))
 # DVZ (dvz.de) and Verkehrs-Rundschau (verkehrsrundschau.de) are behind paywalls
 # and do not expose public RSS; configure via RSS_FEEDS if you have access.
 #
-# Destatis, Bundesnetzagentur, BALM and EUR-Lex are each institution's full
-# press/legislation feed, not pre-filtered to logistics — evaluate_relevance()
+# Destatis, Bundesnetzagentur, BALM, EUR-Lex and BMAS are each institution's
+# full press/legislation feed, not pre-filtered to logistics — evaluate_relevance()
 # downstream discards off-topic articles, so expect more noise per run than the
 # narrower trade-press feeds below.
+#
+# 2026-07-21: added MM Logistik + Logistik Express (AI/tech-in-logistics and
+# TMS/software gap identified in niche-alignment review) and BMAS (labor-market
+# / Fachkräftemangel gap). No working public RSS found for Fraunhofer IML
+# specifically, despite its content being the closest topical match (SAP/ERP
+# partner overviews, KI-in-Logistik whitepapers) — only the all-institutes
+# feed at fraunhofer.de/en/rss/press.rss exists, and it's too broad/noisy to
+# add unfiltered. Same for a dedicated Spedition-insolvency source: Creditreform
+# and DSLV cover the topic but expose no RSS. A Google News search-RSS can
+# stand in for insolvency coverage — not wired in below since it returned empty
+# when tested from this session and needs verification with a real client first:
+#   https://news.google.com/rss/search?q=(Spedition+OR+Logistik)+(Insolvenz+OR+Pleite)&hl=de&gl=DE&ceid=DE:de
 _DEFAULT_FEEDS: list[dict] = [
     {"url": "https://logistik-heute.de/rss.xml", "topic": "Logistik Heute"},
     {"url": "https://www.logistra.de/rss.xml", "topic": "Logistra"},
     {"url": "https://logistik-news24.de/feed", "topic": "Logistik News24"},
+    # /rss/logistik (not /rss/alle or /rss/test) — confirmed 2026-07-21 that
+    # articles here load with resetPaywallArticle:true (free); the /test feed
+    # is Vogel Communications Group's paid comparison-test content.
+    {"url": "https://www.eurotransport.de/rss/logistik", "topic": "Eurotransport"},
+    # TMS/WMS/intralogistics trade press — covers the software/ERP gap.
+    # Vogel Communications Group, same publisher family as Eurotransport above;
+    # spot-check for paywalled articles the same way before trusting long-term.
+    # Feed confirmed live 2026-07-21 (real recent items, RSS 2.0).
+    {"url": "https://www.mm-logistik.vogel.de/rss/news.xml", "topic": "MM Logistik"},
+    # Austrian/DACH trade press, broader digitalization/tech-in-logistics
+    # coverage than the DE-only titles above. Feed confirmed live 2026-07-21.
+    {"url": "https://www.logistik-express.com/feed", "topic": "Logistik Express"},
     {
         "url": "https://www.destatis.de/SiteGlobals/Functions/RSSFeed/DE/RSSNewsfeed/Aktuell.xml?nn=3624",
         "topic": "Destatis",
@@ -44,6 +68,15 @@ _DEFAULT_FEEDS: list[dict] = [
     {
         "url": "https://ec.europa.eu/commission/presscorner/api/rss?text=transport",
         "topic": "DG MOVE",
+    },
+    # Bundesministerium für Arbeit und Soziales — labor-market/Fachkräftemangel
+    # gap. Documented as BMAS's official general RSS feed (RSS 2.0) on their
+    # own site; not independently confirmed live from this session (fetch
+    # returned empty here, same as several other .xml gov endpoints) — verify
+    # on first real run before relying on it.
+    {
+        "url": "https://www.bmas.de/SiteGlobals/Functions/RSSFeed/DE/RSSNewsfeed/RSSNewsfeed.xml",
+        "topic": "BMAS",
     },
 ]
 
