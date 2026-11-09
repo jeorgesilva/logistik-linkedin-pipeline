@@ -1,21 +1,21 @@
-# Ruff config for engine-api. Runtime is Python 3.11 (Dockerfile + CI).
+# Ruff-Konfiguration für engine-api. Laufzeit ist Python 3.11 (Dockerfile + CI).
 target-version = "py311"
 
 [lint.per-file-ignores]
-# BLE001 (blind except) is an intentional design choice in these modules, not debt.
-# Every catch-all here wraps an external, unreliable boundary (Ollama/LLM calls,
-# RSS feeds, HTTP scraping, ChromaDB, Pollinations, LinkedIn, Cloudflare Worker,
-# cloudflared metrics) and always logs + returns a fallback. One malformed article
-# or flaky source must never take down the whole pipeline run or background loop.
-# Any module NOT listed here (main.py, db.py, ...) still gets BLE001 enforced.
-"agents.py" = ["BLE001"]          # LLM calls: retry loop, then fallback value
-"extract.py" = ["BLE001"]         # trafilatura / crawl4ai on arbitrary web pages
-"images.py" = ["BLE001"]          # Pollinations.ai with backoff
-"kb.py" = ["BLE001"]              # ChromaDB/embeddings: pipeline continues without RAG
-"linkedin.py" = ["BLE001"]        # per-post publish failure must not abort the batch
-"pipeline.py" = ["BLE001"]        # per-article isolation inside the batch
-"queue_poller.py" = ["BLE001"]    # background loop polling the Cloudflare Worker
-"rank.py" = ["BLE001"]            # TF-IDF fallback to unranked top-N
-"rss.py" = ["BLE001"]             # per-feed isolation: one dead feed != no articles
-"tunnel_reporter.py" = ["BLE001"] # background loop reporting the tunnel URL
-"scripts/debug/*.py" = ["BLE001"] # manual debug scripts, not part of the service
+# BLE001 (blind except) ist in diesen Modulen eine bewusste Designentscheidung, keine technische
+# Schuld. Jedes Catch-all hier umschließt eine externe, unzuverlässige Grenze (Ollama/LLM-Aufrufe,
+# RSS-Feeds, HTTP-Scraping, ChromaDB, Pollinations, LinkedIn, Cloudflare Worker,
+# cloudflared-Metriken), loggt den Fehler immer und liefert einen Fallback. Ein fehlerhafter
+# Artikel oder eine instabile Quelle darf nie den ganzen Pipeline-Lauf oder eine Hintergrundschleife
+# zum Absturz bringen. Für jedes hier NICHT aufgeführte Modul (main.py, db.py, ...) gilt BLE001 weiter.
+"agents.py" = ["BLE001"]          # LLM-Aufrufe: Retry-Schleife, danach Fallback-Wert
+"extract.py" = ["BLE001"]         # trafilatura / crawl4ai auf beliebigen Webseiten
+"images.py" = ["BLE001"]          # Pollinations.ai mit Backoff
+"kb.py" = ["BLE001"]              # ChromaDB/Embeddings: Pipeline läuft ohne RAG weiter
+"linkedin.py" = ["BLE001"]        # Fehler beim Veröffentlichen eines Posts darf den Batch nicht abbrechen
+"pipeline.py" = ["BLE001"]        # Isolation pro Artikel innerhalb des Batches
+"queue_poller.py" = ["BLE001"]    # Hintergrundschleife, die den Cloudflare Worker abfragt
+"rank.py" = ["BLE001"]            # TF-IDF-Fallback auf ungerankte Top-N
+"rss.py" = ["BLE001"]             # Isolation pro Feed: ein toter Feed != keine Artikel
+"tunnel_reporter.py" = ["BLE001"] # Hintergrundschleife, die die Tunnel-URL meldet
+"scripts/debug/*.py" = ["BLE001"] # manuelle Debug-Skripte, nicht Teil des Services

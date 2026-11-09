@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install playwright chromium for JS-heavy page fallback
+# Playwright-Chromium installieren (Fallback für JavaScript-lastige Seiten)
 RUN playwright install chromium --with-deps 2>/dev/null || true
 
 COPY . .

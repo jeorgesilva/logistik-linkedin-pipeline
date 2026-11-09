@@ -5,14 +5,14 @@ compatibility_date = "2026-07-16"
 [assets]
 directory = "./public/"
 binding = "ASSETS"
-# Only /api/* goes through the Worker script below; every other path (the
-# button page itself) is served directly from ./public/ without invoking it.
+# Nur /api/* läuft durch das Worker-Skript unten; jeder andere Pfad (die
+# Button-Seite selbst) wird direkt aus ./public/ ausgeliefert, ohne es aufzurufen.
 run_worker_first = ["/api/*"]
 
 [[kv_namespaces]]
 binding = "QUEUE_KV"
 id = "f0de75dee89b4307b2f74b51fa11714b"
 
-# QUEUE_SHARED_SECRET is NOT set here on purpose — secrets must not be
-# committed to wrangler.toml. Set it after deploying with:
+# QUEUE_SHARED_SECRET wird hier absichtlich NICHT gesetzt — Secrets dürfen nicht
+# in wrangler.toml committet werden. Nach dem Deploy setzen mit:
 #   wrangler secret put QUEUE_SHARED_SECRET
