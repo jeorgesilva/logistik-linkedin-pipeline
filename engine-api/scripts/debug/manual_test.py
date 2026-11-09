@@ -1,4 +1,4 @@
-from agents import evaluate_relevance, build_bridge, generate_post
+from agents import build_bridge, evaluate_relevance, generate_post
 
 ARTICLES = [
     {

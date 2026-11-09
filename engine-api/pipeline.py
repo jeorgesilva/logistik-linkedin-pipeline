@@ -3,8 +3,8 @@ from __future__ import annotations
 import logging
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Optional
 
+import pipeline_status
 from agents import (
     build_bridge,
     evaluate_promotional_tone,
@@ -15,7 +15,6 @@ from agents import (
 from db import insert_post, list_posts, source_url_exists, update_post
 from extract import extract_article
 from images import generate_image
-import pipeline_status
 from rank import dedup_and_rank
 from rss import fetch_rss_feeds
 from seed_utils import make_seed
@@ -27,8 +26,8 @@ MIN_TEXT_CHARS = int(os.getenv("MIN_TEXT_CHARS", "500"))
 
 
 def collect_articles(
-    keywords: Optional[list[str]] = None,  # kept for API compat, not used in RSS mode
-    max_articles: Optional[int] = None,
+    keywords: list[str] | None = None,  # kept for API compat, not used in RSS mode
+    max_articles: int | None = None,
 ) -> list[dict]:
     """Fetch headlines from RSS feeds and return top N deduplicated articles.
 
@@ -58,7 +57,7 @@ def _collect_deduped_pool() -> list[dict]:
     return deduped
 
 
-def _process_from_relevance(art: dict, rel_motivo: str) -> Optional[int]:
+def _process_from_relevance(art: dict, rel_motivo: str) -> int | None:
     """Etapas 2-4 — assumes Etapa 1 (relevância) already passed for `art`."""
     try:
         # Full-text extraction — only for articles that passed the filter
@@ -199,8 +198,8 @@ def _process_articles(articles: list[dict], target_posts: int) -> dict:
 
 
 def run_batch(
-    keywords: Optional[list[str]] = None,
-    max_articles: Optional[int] = None,
+    keywords: list[str] | None = None,
+    max_articles: int | None = None,
 ) -> dict:
     target = max_articles or MAX_ARTICLES
     try:

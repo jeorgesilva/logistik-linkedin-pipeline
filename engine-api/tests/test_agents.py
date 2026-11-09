@@ -1,11 +1,16 @@
 import json
-import sys
 import os
+import sys
 from unittest.mock import patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from agents import build_bridge, evaluate_promotional_tone, evaluate_relevance, generate_post
+from agents import (
+    build_bridge,
+    evaluate_promotional_tone,
+    evaluate_relevance,
+    generate_post,
+)
 
 
 def test_evaluate_promotional_tone_flags_ad_like_post():

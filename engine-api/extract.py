@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 import trafilatura
 
@@ -13,7 +12,7 @@ _HEADERS = {
 _TIMEOUT = 20
 
 
-def _extract_with_trafilatura(url: str) -> tuple[Optional[str], Optional[str]]:
+def _extract_with_trafilatura(url: str) -> tuple[str | None, str | None]:
     try:
         downloaded = trafilatura.fetch_url(url)
         if not downloaded:
@@ -31,9 +30,10 @@ def _extract_with_trafilatura(url: str) -> tuple[Optional[str], Optional[str]]:
         return None, None
 
 
-def _extract_with_crawl4ai(url: str) -> tuple[Optional[str], Optional[str]]:
+def _extract_with_crawl4ai(url: str) -> tuple[str | None, str | None]:
     try:
         import asyncio
+
         from crawl4ai import AsyncWebCrawler
 
         async def _crawl():

@@ -4,7 +4,6 @@ import asyncio
 import logging
 import os
 from contextlib import asynccontextmanager
-from typing import Optional
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,10 +12,10 @@ from pydantic import BaseModel
 
 import db
 import kb
+import pipeline_status
 from agents import build_bridge, generate_post
 from extract import extract_article
 from images import regenerate_image
-import pipeline_status
 from pipeline import collect_articles, regenerate_missing_texts, run_batch
 from queue_poller import poll_loop
 from tunnel_reporter import report_loop
@@ -75,8 +74,8 @@ app.mount("/images", StaticFiles(directory=IMAGE_DIR), name="images")
 # ---------- Models ----------
 
 class CollectRequest(BaseModel):
-    keywords: Optional[list[str]] = None
-    max: Optional[int] = None
+    keywords: list[str] | None = None
+    max: int | None = None
 
 
 class PostCreate(BaseModel):
@@ -91,12 +90,12 @@ class PostCreate(BaseModel):
 
 
 class PostUpdate(BaseModel):
-    post_text: Optional[str] = None
-    status: Optional[str] = None
-    image_prompt: Optional[str] = None
-    image_path: Optional[str] = None
-    seed: Optional[int] = None
-    linkedin_urn: Optional[str] = None
+    post_text: str | None = None
+    status: str | None = None
+    image_prompt: str | None = None
+    image_path: str | None = None
+    seed: int | None = None
+    linkedin_urn: str | None = None
 
 
 class PostReject(BaseModel):
@@ -104,8 +103,8 @@ class PostReject(BaseModel):
 
 
 class RunRequest(BaseModel):
-    keywords: Optional[list[str]] = None
-    max: Optional[int] = None
+    keywords: list[str] | None = None
+    max: int | None = None
 
 
 # ---------- Routes ----------
@@ -140,7 +139,7 @@ def create_post(req: PostCreate):
 
 
 @app.get("/posts")
-def list_posts(status: Optional[str] = None):
+def list_posts(status: str | None = None):
     return db.list_posts(status=status)
 
 
