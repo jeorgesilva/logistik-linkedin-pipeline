@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 _HEADERS = {
     "User-Agent": (
-        "Mozilla/5.0 (compatible; LogistikBot/1.0; +https://logaid.ai)"
+        "Mozilla/5.0 (compatible; LogistikBot/1.0; +https://frachtwerk.example)"
     )
 }
 _TIMEOUT = 20

@@ -53,7 +53,7 @@ def _angle(impact="x", risk="y"):
         "crenca_aplicada": "",
         "impacto_para_spedition": impact,
         "risco_ou_oportunidade": risk,
-        "conexao_logaid": "",
+        "conexao_frachtwerk": "",
         "empresa_mencionada": "",
     }
 
@@ -114,7 +114,7 @@ def test_generate_post_happy_path_assembles_and_returns_revised_text():
 def test_generate_post_retries_revision_when_forbidden_phrase_survives():
     draft_raw = json.dumps({"argument_text": _dummy_argument(80)})
     frame_raw = _frame_response()
-    dirty_text = _dummy_argument(110) + " LogAid hilft dabei."
+    dirty_text = _dummy_argument(110) + " Frachtwerk hilft dabei."
     clean_text = _dummy_argument(112)
     revise_dirty = json.dumps({"post_text": dirty_text, "changed": True, "motivo": "erweitert"})
     revise_clean = json.dumps({"post_text": clean_text, "changed": True, "motivo": "Phrase entfernt"})

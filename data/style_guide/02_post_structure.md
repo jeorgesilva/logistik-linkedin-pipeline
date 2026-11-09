@@ -1,6 +1,6 @@
 # 02 — Post Structure Templates
 
-Every LogAid post follows one of six structural patterns. Choose the pattern before writing a single word.
+Every Frachtwerk post follows one of six structural patterns. Choose the pattern before writing a single word.
 
 **First decision: is this content marketing or opinion?** Patterns A–E are useful when the post's job is to inform (a report, an event, a capability). Pattern F is different in kind, not just in topic — it exists to argue a position from `06_point_of_view.md`. When in doubt, default to F: it produces posts that sound less like brand content and more like someone with a stake in the industry saying what they think.
 
@@ -18,7 +18,7 @@ Every LogAid post follows one of six structural patterns. Choose the pattern bef
 
 [3–5 bullets with emoji or → arrows: concrete observations or signals]
 
-[Bridge to LogAid — 1 sentence, must feel like a logical consequence]
+[Bridge to Frachtwerk — 1 sentence, must feel like a logical consequence]
 
 [CTA — link or call to action]
 
@@ -35,7 +35,7 @@ Every LogAid post follows one of six structural patterns. Choose the pattern bef
 > *„🌍 +1,5 Prozentpunkte... 🇦🇪 VAE führen mit 70,1 %..."*
 > ← Bullets skim-readable for LinkedIn. Emoji flags/icons work as visual anchors.
 
-> *„Genau hier setzen wir mit LOGAID an."*
+> *„Genau hier setzen wir mit FRACHTWERK an."*
 > ← Product tie-in arrives AFTER the data has built the case.
 
 ---
@@ -50,7 +50,7 @@ Every LogAid post follows one of six structural patterns. Choose the pattern bef
 
 [2–3 sentences: the real operational implication]
 
-[The LogAid angle — why this proves our design principle (e.g. Datenhoheit)]
+[The Frachtwerk angle — why this proves our design principle (e.g. Datenhoheit)]
 
 [Closing aphorism or reframe — one sentence, punchy]
 
@@ -85,7 +85,7 @@ Every LogAid post follows one of six structural patterns. Choose the pattern bef
 
 [What the smart response looks like — not our product yet, just the category of action]
 
-[Bridge to LogAid as one of the tools for that response]
+[Bridge to Frachtwerk as one of the tools for that response]
 
 [CTA to deeper content]
 
@@ -95,7 +95,7 @@ Every LogAid post follows one of six structural patterns. Choose the pattern bef
 ---
 
 ## Pattern D — Capability Showcase
-*Use for: showcasing what LogAid or a partner company can do; may be bilingual*
+*Use for: showcasing what Frachtwerk or a partner company can do; may be bilingual*
 
 ```
 [Dramatic opening image/scenario — sensory, specific, not generic]
@@ -126,7 +126,7 @@ Every LogAid post follows one of six structural patterns. Choose the pattern bef
 
 [What this means for the market going forward]
 
-[LogAid positioning: who we're building for and why now]
+[Frachtwerk positioning: who we're building for and why now]
 
 [No CTA needed — post stands alone]
 
@@ -138,7 +138,7 @@ Every LogAid post follows one of six structural patterns. Choose the pattern bef
 ---
 
 ## Pattern F — Opinion / Market Critique
-*Use for: taking a public position on how the market operates, a trend, a widely-repeated claim, or conventional wisdom LogAid disagrees with. This is the default pattern for posts whose main job is opinion, not information.*
+*Use for: taking a public position on how the market operates, a trend, a widely-repeated claim, or conventional wisdom Frachtwerk disagrees with. This is the default pattern for posts whose main job is opinion, not information.*
 
 ```
 [The contested question or claim — stated plainly, as something a chunk of the market believes or does]
@@ -149,9 +149,9 @@ Every LogAid post follows one of six structural patterns. Choose the pattern bef
 
 [Evidence or first-hand grounding — a number, a named event, an operational detail that makes the claim earned rather than asserted]
 
-[Optional: what the smart alternative looks like — category-level, not necessarily LogAid]
+[Optional: what the smart alternative looks like — category-level, not necessarily Frachtwerk]
 
-[Optional, only if earned: LogAid as the practical consequence of the belief — may be entirely absent]
+[Optional, only if earned: Frachtwerk as the practical consequence of the belief — may be entirely absent]
 
 [No CTA required. If one exists, it invites discussion, not a demo.]
 
@@ -179,7 +179,7 @@ Every LogAid post follows one of six structural patterns. Choose the pattern bef
 | **Hook (line 1)** | Must work as a standalone sentence when pulled out of context. Test: would someone screenshot just this line? |
 | **Paragraph length** | Maximum 3 sentences per paragraph on LinkedIn. Prefer 1–2. |
 | **Bullets** | Use `→` for actionable items. Use emoji (🛠️🛡️🌱📈) for benefit/feature lists. Never mix the two in one post. Default to prose (no bullets) in Pattern F. |
-| **LogAid mention** | Optional. In Patterns A–E, appears at most once, never twice, never in the first third. In Pattern F, may be absent entirely — the belief being defended must be what justifies the mention, not the post's obligation to reference the product. |
+| **Frachtwerk mention** | Optional. In Patterns A–E, appears at most once, never twice, never in the first third. In Pattern F, may be absent entirely — the belief being defended must be what justifies the mention, not the post's obligation to reference the product. |
 | **Closing aphorism** | Optional but powerful. One sentence. Subject-verb-object. No subordinate clauses. In Pattern F, this is often the whole payoff — the post can end here with no product mention and no CTA. |
 | **CTA** | Optional, maximum one per post. In Patterns A–C, usually a link to deeper content. In Pattern F, prefer none, or a low-key invitation to disagree in the comments rather than a link. |
-| **Hashtags** | 5–7 in Patterns A–E. 3–5 in Pattern F, brand hashtag (`#logaid`) optional. On their own line(s) at the end. Never inline mid-sentence. |
+| **Hashtags** | 5–7 in Patterns A–E. 3–5 in Pattern F, brand hashtag (`#frachtwerk`) optional. On their own line(s) at the end. Never inline mid-sentence. |

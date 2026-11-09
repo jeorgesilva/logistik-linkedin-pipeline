@@ -22,7 +22,7 @@ MIN_ARGUMENT_WORDS = int(os.getenv("MIN_ARGUMENT_WORDS", "70"))
 # Condensed from data/style_guide/06_point_of_view.md — embedded directly in the
 # bridge/writer prompts instead of left to RAG retrieval. RAG only surfaces 2 of 39
 # guideline chunks per call, so a foundational, always-needed asset like the belief
-# bank was showing up unreliably; posts came out as fact + generic "LogAid hilft
+# bank was showing up unreliably; posts came out as fact + generic "Frachtwerk hilft
 # dabei..." tack-on instead of an actual argued position. Keep this in sync with
 # 06_point_of_view.md if the belief bank changes.
 _POV_BELIEFS = """\
@@ -55,14 +55,14 @@ _FORBIDDEN_PHRASES_BLOCK = (
 )
 
 _WRITER_THIRD_PARTY_RULE = """\
-DRITTFIRMEN: nie eine im Artikel genannte private Firma (außer LogAid) für ihre Leistungen, Lösungen oder Erfolge loben oder hervorheben — immer analytisch und kritisch bleiben (Risiken, Trade-offs, Bedeutung für Wettbewerber), nie im Ton einer Erfolgsgeschichte oder Werbung."""
+DRITTFIRMEN: nie eine im Artikel genannte private Firma (außer Frachtwerk) für ihre Leistungen, Lösungen oder Erfolge loben oder hervorheben — immer analytisch und kritisch bleiben (Risiken, Trade-offs, Bedeutung für Wettbewerber), nie im Ton einer Erfolgsgeschichte oder Werbung."""
 
 # Etapa 3a — draft only the argument (the substantive core), before hook/pivot/closing
 # exist. Asking a model to hit a length target across a whole 6-part structured post
 # in one shot is unreliable; asking it to hit a smaller target for just this one
 # paragraph is realistic and checkable — the frame (Etapa 3b) adds words on top.
 _ARGUMENT_SYSTEM = """\
-Du bist ein erfahrener LinkedIn-Ghostwriter für LogAid — KI-gestützte Dispositionsautomatisierung für Speditionen im deutschen Mittelstand.
+Du bist ein erfahrener LinkedIn-Ghostwriter für Frachtwerk — KI-gestützte Dispositionsautomatisierung für Speditionen im deutschen Mittelstand.
 
 """ + _WRITER_READER_PROFILE + """
 
@@ -73,7 +73,7 @@ DEIN JOB IST NICHT, DAS EREIGNIS ZUSAMMENZUFASSEN. Dein Job ist, eine Position d
 STRUKTUR:
 1. Argument, 2–4 Sätze Fließtext, KEINE Bullet-Points: entwickle WARUM das für eine Spedition wichtig ist. Nutze questao_contestada und crenca_aplicada als Gerüst.
 2. Ein konkreter Beleg oder operatives Detail aus dem Artikel, das die Aussage verdient statt nur behauptet.
-3. Optional, nur wenn es sich aus dem Argument zwingend ergibt: LogAid als praktische Konsequenz, höchstens 1 Satz, NIE als Prämisse. "LogAid hilft dabei..." ohne vorheriges Argument ist verboten.
+3. Optional, nur wenn es sich aus dem Argument zwingend ergibt: Frachtwerk als praktische Konsequenz, höchstens 1 Satz, NIE als Prämisse. "Frachtwerk hilft dabei..." ohne vorheriges Argument ist verboten.
 
 LÄNGE: mindestens """ + str(MIN_ARGUMENT_WORDS) + """ Wörter. Ein Argument, das nicht entwickelt wird, ist kein akzeptables Ergebnis — jedes Thema lässt sich auf diese Länge entwickeln, ohne die Kohärenz zu verlieren.
 
@@ -90,14 +90,14 @@ Antworte NUR als JSON: {"argument_text": "..."}."""
 # assembly of the final post_text happens in Python (_assemble_post), not here —
 # that guarantees the validated argument reaches the final post verbatim.
 _FRAME_SYSTEM = """\
-Du bist ein erfahrener LinkedIn-Ghostwriter für LogAid — KI-gestützte Dispositionsautomatisierung für Speditionen im deutschen Mittelstand.
+Du bist ein erfahrener LinkedIn-Ghostwriter für Frachtwerk — KI-gestützte Dispositionsautomatisierung für Speditionen im deutschen Mittelstand.
 
 """ + _WRITER_READER_PROFILE + """
 
 AUFGABE: Ein Kern-Argument für den Post ist BEREITS geschrieben (unten, unter "BEREITS GESCHRIEBENES ARGUMENT"). Deine Aufgabe ist NICHT, es umzuschreiben, zu kürzen oder zusammenzufassen — sondern einen Hook davor und einen Abschluss danach zu liefern, die natürlich in das Argument hineinführen bzw. daraus folgen.
 
 TEILE, die du lieferst:
-1. Hook (1 Zeile): das reale Ereignis, konkret — Datum, Zahl oder umgedeutetes Ereignis. Max 12 Wörter. Noch keine LogAid-Nennung.
+1. Hook (1 Zeile): das reale Ereignis, konkret — Datum, Zahl oder umgedeutetes Ereignis. Max 12 Wörter. Noch keine Frachtwerk-Nennung.
 2. Pivot (1 Satz): "Die meisten sehen darin X. Für eine Spedition ist es Y." — oder sinngemäß. Muss inhaltlich direkt zum Argument unten hinführen.
 3. Abschluss: Call-to-Action ODER offene Frage ODER ein prägnanter Aphorismus. Muss inhaltlich aus dem Argument folgen, nicht generisch sein.
 4. 5–7 Hashtags, thematisch zum Artikel und Argument passend (mit "#").
@@ -116,7 +116,7 @@ Antworte NUR als JSON: {"hook": "...", "pivot": "...", "closing": "...", "hashta
 # job here is the one thing Python can't check: whether hook+pivot (written
 # separately in 3b) really connects to the argument, or feels bolted on.
 _REVISE_SYSTEM = """\
-Du bist Redakteur/Lektor für LogAid-LinkedIn-Posts. Du bekommst einen fertig zusammengesetzten Post und prüfst ihn kritisch, bevor er freigegeben wird — wie ein Autor, der seinen Text am Ende noch einmal ganz liest, bevor er ihn abgibt.
+Du bist Redakteur/Lektor für Frachtwerk-LinkedIn-Posts. Du bekommst einen fertig zusammengesetzten Post und prüfst ihn kritisch, bevor er freigegeben wird — wie ein Autor, der seinen Text am Ende noch einmal ganz liest, bevor er ihn abgibt.
 
 PRÜFE:
 1. KOHÄRENZ: Führen Hook und Pivot (die ersten 1-2 Zeilen) inhaltlich und logisch zum Argument, das danach kommt? Wirkt der Übergang angeklebt/unpassend, oder wie aus einem Guss?
@@ -155,13 +155,13 @@ _BRIDGE_ANGLE_FIELDS = """\
       "crenca_aplicada": "Die gewählte Überzeugung aus der Bank oben, wörtlich oder leicht ans Ereignis angepasst — leerer String wenn keine wirklich passt",
       "impacto_para_spedition": "Konkrete Auswirkung für eine Spedition",
       "risco_ou_oportunidade": "Konkretes Risiko oder Chance im Betrieb",
-      "conexao_logaid": "Optional: wie die gewählte Überzeugung, wenn sie eine praktische Konsequenz verlangt, zu LogAid führt — sonst leerer String",
+      "conexao_frachtwerk": "Optional: wie die gewählte Überzeugung, wenn sie eine praktische Konsequenz verlangt, zu Frachtwerk führt — sonst leerer String",
       "empresa_mencionada": "Optional: Name der im Artikel zitierten Drittfirma, sonst leerer String"
     }"""
 
 _THIRD_PARTY_RULE = """\
 REGEL ÜBER DRITTFIRMEN:
-Wenn der Artikel eine bestimmte private Firma nennt (außer LogAid), behandle sie nur als \
+Wenn der Artikel eine bestimmte private Firma nennt (außer Frachtwerk), behandle sie nur als \
 illustratives Beispiel eines größeren Branchenmusters — nie als Protagonistin oder \
 "Erfolgsgeschichte". Übernimm nie Lob, Superlative oder werbliche Sprache des Quellartikels \
 über diese Firma. Generalisiere wo möglich: statt "Firma X hat Y gemacht" schreibe "manche \
@@ -175,11 +175,11 @@ für die Glaubwürdigkeit des Fakts zwingend nötig."""
 # quality judgment happens, mirrors brainstorming/freewriting: several rough premises
 # on paper before deciding which one is worth arguing.
 _BRAINSTORM_SYSTEM = """\
-Du bist Analytiker für deutsche Speditionen und denkst im Sinne der LogAid-Positionierung.
+Du bist Analytiker für deutsche Speditionen und denkst im Sinne der Frachtwerk-Positionierung.
 
 AUFGABE: Das ist Ideenfindung, kein Zusammenfassen und keine Entscheidung. Entwickle 3 \
 verschiedene mögliche argumentative Brücken zwischen dem Nachrichtenereignis und der \
-LogAid-Positionierung, BEVOR du dich auf eine festlegst. Ein schwächerer oder spekulativer \
+Frachtwerk-Positionierung, BEVOR du dich auf eine festlegst. Ein schwächerer oder spekulativer \
 Ansatz ist hier in Ordnung — die kritische Auswahl passiert in einem späteren Schritt, nicht hier.
 
 ÜBERZEUGUNGSBANK (jede ist eine kontestierbare These — keine passende These heißt oft: kein Thema):
@@ -213,7 +213,7 @@ Antworte NUR als JSON: {"angulos": [ANSATZ_1, ANSATZ_2, ANSATZ_3]} — Liste mit
 # replaces the old substring-matching discard filter as the primary gate (that filter
 # is kept downstream only as a cheap secondary safety net).
 _BRIDGE_SELECT_SYSTEM = """\
-Du bist Redakteur für LogAid und bewertest 3 vorgeschlagene argumentative Brücken zwischen \
+Du bist Redakteur für Frachtwerk und bewertest 3 vorgeschlagene argumentative Brücken zwischen \
 einem Nachrichtenereignis und der Spedition-Realität. Du bekommst den Artikel und die 3 Ansätze \
 im Vergleich — deine Aufgabe ist eine kritische, kontrastive Entscheidung, kein erneutes Brainstorming.
 
@@ -240,10 +240,10 @@ _AD_CHECK_SYSTEM = """\
 Du bewertest, ob ein LinkedIn-Beitrag wie eine unabhängige, kritische Analyse eines \
 Branchenthemas klingt — oder wie Werbung/PR für ein bestimmtes DRITTUNTERNEHMEN oder \
 dessen Produkt. \
-WICHTIG: LogAid ist der Auftraggeber dieses Beitrags — eine kurze, sachliche Erwähnung von \
-LogAid am Ende des Beitrags ist der reguläre, erwünschte Zweck des Textes und zählt NIEMALS \
+WICHTIG: Frachtwerk ist der Auftraggeber dieses Beitrags — eine kurze, sachliche Erwähnung von \
+Frachtwerk am Ende des Beitrags ist der reguläre, erwünschte Zweck des Textes und zählt NIEMALS \
 als soa_como_ad=true, selbst wenn sie positiv formuliert ist. Bewerte NUR den Ton gegenüber \
-Drittfirmen (jedes im Beitrag genannte Unternehmen außer LogAid). \
+Drittfirmen (jedes im Beitrag genannte Unternehmen außer Frachtwerk). \
 Kriterien für "soa_como_ad=true": der Beitrag lobt ein Drittunternehmen, hebt dessen \
 Produkt/Lösung positiv hervor, oder liest sich wie eine Erfolgsgeschichte/Case Study eines \
 Dritten. \
@@ -393,7 +393,7 @@ _BRIDGE_ANGLE_KEYS = [
     "crenca_aplicada",
     "impacto_para_spedition",
     "risco_ou_oportunidade",
-    "conexao_logaid",
+    "conexao_frachtwerk",
 ]
 
 
@@ -462,7 +462,7 @@ def build_bridge(article: dict, relevance_motivo: str = "") -> dict | None:
     reliable quality gate than a model rating its own single output in isolation.
 
     Returns {"o_que_aconteceu", "impacto_para_spedition", "risco_ou_oportunidade",
-    "conexao_logaid", ...} or None on failure.
+    "conexao_frachtwerk", ...} or None on failure.
     """
     title = article.get("title", "")[:70]
 
@@ -509,10 +509,10 @@ def _format_bridge_context(bridge: dict | None) -> str:
         "=== NARRATIVE BRÜCKE — als Gerüst des Arguments verwenden ===\n"
         f"Was passiert ist: {bridge.get('o_que_aconteceu', '')}\n"
         f"Umstrittene Frage/Annahme im Markt: {bridge.get('questao_contestada', '')}\n"
-        f"Angewandte LogAid-Überzeugung: {crenca}\n"
+        f"Angewandte Frachtwerk-Überzeugung: {crenca}\n"
         f"Konkreter Impact für eine Spedition: {bridge.get('impacto_para_spedition', '')}\n"
         f"Risiko / Chance: {bridge.get('risco_ou_oportunidade', '')}\n"
-        f"LogAid-Verbindung: {bridge.get('conexao_logaid', '')}\n\n"
+        f"Frachtwerk-Verbindung: {bridge.get('conexao_frachtwerk', '')}\n\n"
     )
 
 

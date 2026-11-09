@@ -53,7 +53,7 @@ Der Befehl gibt die öffentliche URL aus (etwa
 ## 5. (Optional) Eigene Domain
 
 Im Cloudflare-Dashboard → Workers & Pages → `logistik-queue` → Settings →
-Domains & Routes → Add Custom Domain (z. B. `gerar.logaid.ai`). Das wirkt beim Weitergeben an
+Domains & Routes → Add Custom Domain (z. B. `posts.frachtwerk.example`). Das wirkt beim Weitergeben an
 das Teammitglied professioneller als die `.workers.dev`-URL.
 
 ## 6. `engine-api` konfigurieren
@@ -61,7 +61,7 @@ das Teammitglied professioneller als die `.workers.dev`-URL.
 In der `.env` des Projekts (nicht versioniert):
 
 ```
-QUEUE_WORKER_URL=https://gerar.logaid.ai        # oder die .workers.dev-URL
+QUEUE_WORKER_URL=https://posts.frachtwerk.example        # oder die .workers.dev-URL
 QUEUE_SHARED_SECRET=<derselbe Wert wie in Schritt 3>
 QUEUE_POLL_INTERVAL_SECONDS=60
 ```

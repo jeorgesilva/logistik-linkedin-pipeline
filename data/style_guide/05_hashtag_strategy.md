@@ -3,9 +3,9 @@
 ## Rules
 
 - **5–7 hashtags per post** for Patterns A–E, always at the end, never inline
-- **Pattern F (Opinion/Market Critique, see `02_post_structure.md`): 3–5 hashtags, brand hashtag optional.** An opinion post doesn't need `#logaid` to justify itself — the belief being defended is the anchor, not the brand tag.
+- **Pattern F (Opinion/Market Critique, see `02_post_structure.md`): 3–5 hashtags, brand hashtag optional.** An opinion post doesn't need `#frachtwerk` to justify itself — the belief being defended is the anchor, not the brand tag.
 - German posts use German hashtags; English posts use English hashtags; bilingual posts use both
-- Patterns A–E: always include at least one **brand hashtag** (`#logaid` or `#LogAid`)
+- Patterns A–E: always include at least one **brand hashtag** (`#frachtwerk` or `#Frachtwerk`)
 - Always include at least one **broad audience hashtag** (`#Logistik` or `#logistics`)
 - Mix: 2–3 broad reach + 2–3 niche/specific + 1 brand (Patterns A–E)
 
@@ -15,34 +15,34 @@
 
 ### Industry Crisis / Insolvency (DE)
 ```
-#Logistik #Spedition #Lieferkette #Mittelstand #logaid
+#Logistik #Spedition #Lieferkette #Mittelstand #frachtwerk
 ```
 Optional additions: `#Insolvenz` `#Frachtführer` `#Verlader` `#Liquidität`
 
 ### AI / Automation (DE)
 ```
-#Logistik #Spedition #KI #Automatisierung #Disposition #logaid
+#Logistik #Spedition #KI #Automatisierung #Disposition #frachtwerk
 ```
 Optional additions: `#Mittelstand` `#DSGVO` `#Datenhoheit` `#TMS`
 
 ### Data Sovereignty / Regulatory (DE)
 ```
-#Logistik #Datenhoheit #DSGVO #KI #Spedition #logaid
+#Logistik #Datenhoheit #DSGVO #KI #Spedition #frachtwerk
 ```
 
 ### Market Data / Report (DE)
 ```
-#Logistik #Spedition #KI #Disposition #Mittelstand #Automatisierung #logaid
+#Logistik #Spedition #KI #Disposition #Mittelstand #Automatisierung #frachtwerk
 ```
 
 ### Road Freight / Transport Crisis (DE)
 ```
-#Logistik #Speditionen #Straßengüterverkehr #Netzausbau #logaid
+#Logistik #Speditionen #Straßengüterverkehr #Netzausbau #frachtwerk
 ```
 
 ### AI in Logistics (EN)
 ```
-#Logistics #FreightForwarding #AI #Automation #Dispatching #LogAid
+#Logistics #FreightForwarding #AI #Automation #Dispatching #Frachtwerk
 ```
 
 ### Aviation / Infrastructure (DE)
@@ -57,7 +57,7 @@ Optional additions: `#Mittelstand` `#DSGVO` `#Datenhoheit` `#TMS`
 
 ### German Logistics Market / Insolvency (EN)
 ```
-#Logistics #FreightForwarding #GermanLogistics #AI #Automation #LogAid
+#Logistics #FreightForwarding #GermanLogistics #AI #Automation #Frachtwerk
 ```
 
 ---
@@ -71,7 +71,7 @@ Optional additions: `#Mittelstand` `#DSGVO` `#Datenhoheit` `#TMS`
 | `#Sustainability` | Only if the post is specifically about environment — not as padding |
 | `#B2B` | Too generic |
 | `#Tech` | Too generic |
-| `#StartUp` | LogAid should not position as a startup — positions as an operational partner |
+| `#StartUp` | Frachtwerk should not position as a startup — positions as an operational partner |
 | `#AI` alone without context hashtags | Drowns in general AI content; always pair with logistics context |
 
 ---
@@ -80,4 +80,4 @@ Optional additions: `#Mittelstand` `#DSGVO` `#Datenhoheit` `#TMS`
 
 - German hashtags: capitalize as compound noun → `#Straßengüterverkehr` `#Freileitungsbau` `#Datenhoheit`
 - English hashtags: CamelCase → `#FreightForwarding` `#GridExpansion`
-- Brand: `#logaid` (all lowercase, consistent across all posts)
+- Brand: `#frachtwerk` (all lowercase, consistent across all posts)

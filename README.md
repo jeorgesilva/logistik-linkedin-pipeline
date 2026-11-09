@@ -9,7 +9,7 @@ Selbst gehostete Content-Pipeline, rund um die Uhr in Betrieb, die deutsche Logi
 4. Extrahiert den vollständigen Artikeltext (trafilatura, crawl4ai als Fallback)
 5. Baut eine erzählerische Brücke zwischen der Nachricht und dem Alltag einer Spedition (Artikel ohne konkrete, belastbare Auswirkung werden verworfen)
 6. Führt 2 Ollama-LLM-Agenten aus: deutscher Post-Writer + Bildprompt-Generator. Der Post-Writer nutzt RAG: ähnliche freigegebene Posts + Style-Guide-Abschnitte werden aus ChromaDB abgerufen
-7. Prüft den erzeugten Post auf werblichen Ton gegenüber Drittunternehmen — wird automatisch verworfen, wenn er wie Werbung/PR für jemand anderen als LogAid klingt (siehe „Anti-Propaganda / kritische Distanz“ unten)
+7. Prüft den erzeugten Post auf werblichen Ton gegenüber Drittunternehmen — wird automatisch verworfen, wenn er wie Werbung/PR für jemand anderen als Frachtwerk klingt (siehe „Anti-Propaganda / kritische Distanz“ unten)
 8. Erzeugt LinkedIn-Headerbilder über Pollinations.ai (kostenlos, kein API-Key)
 9. Speichert Entwürfe in SQLite → zeigt sie in einer Streamlit-Review-Queue an
 
@@ -66,7 +66,7 @@ Sobald der Stack läuft, die Knowledge Base mit den 5 freigegebenen Beispielpost
 docker exec engine-api python ingest_seed_posts.py
 ```
 
-Das legt 5 Posts im LogAid-Stil als `approved` in SQLite an und bettet sie in ChromaDB ein. RAG wird automatisch aktiv, sobald `KB_MIN_EXAMPLES` (Standard: 3) freigegebene Posts vorhanden sind.
+Das legt 5 Posts im Frachtwerk-Stil als `approved` in SQLite an und bettet sie in ChromaDB ein. RAG wird automatisch aktiv, sobald `KB_MIN_EXAMPLES` (Standard: 3) freigegebene Posts vorhanden sind.
 
 ---
 
@@ -141,13 +141,13 @@ Wenn ein Artikel ein bestimmtes Drittunternehmen nennt, soll die Pipeline kritis
 wahren, statt das Lob der Quelle zu übernehmen:
 
 - **Prompt-Regeln** (`engine-api/agents.py`, `_BRIDGE_SYSTEM` und `_WRITER_SYSTEM`): Ein genanntes
-  Drittunternehmen (nie LogAid) dient nur als illustratives Beispiel für ein größeres
+  Drittunternehmen (nie Frachtwerk) dient nur als illustratives Beispiel für ein größeres
   Branchenmuster — nie als Protagonist oder „Erfolgsgeschichte“. Der Writer ist angewiesen,
   analytisch zu bleiben (Risiken, Zielkonflikte, Folgen für den Wettbewerb) statt lobend.
 - **Automatische Prüfung** (`evaluate_promotional_tone()` in `agents.py`, eingebunden in
   `pipeline.py:_process_articles`): Nach der Erzeugung eines Posts klassifiziert ein eigener
   LLM-Aufruf, ob er wie eine unabhängige Analyse oder wie Werbung/PR für ein Drittunternehmen
-  klingt. Die eigene (kurze, standardisierte) Erwähnung von LogAid am Ende jedes Posts ist von
+  klingt. Die eigene (kurze, standardisierte) Erwähnung von Frachtwerk am Ende jedes Posts ist von
   dieser Prüfung ausdrücklich ausgenommen — nur werblicher Ton gegenüber *anderen* Unternehmen
   löst sie aus.
 - **Bei einem Treffer wird der Post automatisch verworfen** — genauso wie bei einer ungültigen

@@ -21,7 +21,7 @@
 4. The delayed-impact warning (who should care and why now)
 5. Early warning signals (3 bullets, `→` arrows)
 6. What type of action the situation calls for (category-level, not product pitch)
-7. LogAid connection (brief, logical)
+7. Frachtwerk connection (brief, logical)
 8. CTA to blog if deep analysis exists
 
 ### Tone markers
@@ -52,7 +52,7 @@
 2. Source attribution (report name, date, publisher)
 3. 3–5 bullet data points with emoji
 4. The "what this means for Logistik specifically" paragraph
-5. LogAid tie-in (positioned as the operational answer to the trend)
+5. Frachtwerk tie-in (positioned as the operational answer to the trend)
 6. Link to original report (credibility)
 
 ### Tone markers
@@ -78,26 +78,26 @@
 1. Event (factual, specific)
 2. Most people read this as X. For a Spedition, Y.
 3. What exactly is exposed / at risk
-4. LogAid's architectural response to this risk
+4. Frachtwerk's architectural response to this risk
 5. Closing aphorism — philosophical but grounded
 6. Optional: link to blog for deeper analysis
 
 ### Tone markers
 - Most restrained tone of all categories. Let the logic do the work.
 - Avoid adjectives. Let nouns and verbs carry the argument.
-- The LogAid mention focuses on architecture, not features.
+- The Frachtwerk mention focuses on architecture, not features.
 
 ---
 
 ## Topic 4: Product / Capability Showcase
-*(What LogAid actually does, specific automation workflows)*
+*(What Frachtwerk actually does, specific automation workflows)*
 
 **Posicionamento aplicável (`06_point_of_view.md`):** crença 2 (sugestão não é automação, é mais um clique) e crença 3 (sistemas de registro documentam, não agem — quem decide é o postfach) e crença 6 (IA genérica entende linguagem, não spedition). Este tópico é o único onde o produto é o protagonista por definição — mas ainda deve ser ancorado numa dessas crenças, não apenas descrito.
 
 ### Framing principles
 - **Show the specific workflow**, not the category: *„Statusabfragen, ETA-Updates, Rückfragen aus dem Postfach, Stammdatenpflege"* — not *„administrative tasks"*.
 - **Quantify the problem first**: *„Hunderte von E-Mails täglich. Manuell. Kopiert von Disponenten, die bereits die meist belasteten Menschen im Gebäude sind."*
-- **The hero is the Disponent getting time back**, not LogAid's technology.
+- **The hero is the Disponent getting time back**, not Frachtwerk's technology.
 - Integration story matters: *„Über TMS, Telematik und Postfach hinweg. Keine Migration. Kein Umlernen."*
 
 ### Structure
@@ -138,7 +138,7 @@
 
 ## Quick Reference: Tone by Topic
 
-| Topic | Urgency | Formality | LogAid prominence | Aphorism? | Crença(s) aplicável(is) |
+| Topic | Urgency | Formality | Frachtwerk prominence | Aphorism? | Crença(s) aplicável(is) |
 |---|---|---|---|---|---|
 | Crisis / Insolvency | High | Medium | Low-medium, or none in Pattern F | Yes — required | 4, 7 |
 | Market Data | Medium | Medium | Medium, or none in Pattern F | Optional | 1, 8 |

@@ -2,7 +2,7 @@
 
 ## Wer spricht
 
-Die Stimme ist institutionell — LogAid als Absender, nicht eine Einzelperson —, aber mit einer klar eingenommenen Position. Der Unterschied: "wir helfen dabei" ist Dienstleister-Ton. "Wir sehen das anders als der Rest des Marktes" ist Positions-Ton. LogAid schreibt wie eine Firma, die eine These über den Markt hat — nicht wie eine Firma, die etwas darin verkauft.
+Die Stimme ist institutionell — Frachtwerk als Absender, nicht eine Einzelperson —, aber mit einer klar eingenommenen Position. Der Unterschied: "wir helfen dabei" ist Dienstleister-Ton. "Wir sehen das anders als der Rest des Marktes" ist Positions-Ton. Frachtwerk schreibt wie eine Firma, die eine These über den Markt hat — nicht wie eine Firma, die etwas darin verkauft.
 
 Für Opinion-Posts gilt zusätzlich `06_point_of_view.md`: jeder Post dieser Art verteidigt eine der dort hinterlegten Überzeugungen, angewendet auf ein aktuelles Ereignis oder Datum. Das ist der Mechanismus, der unterschiedliche Themen unter derselben erkennbaren Stimme hält.
 
@@ -35,9 +35,9 @@ Use fragments deliberately for emphasis:
 - *„Souveränität ist kein Fahnenschwenken. Es ist Risikomanagement."*
 
 ### 4. Product tie-in is the exception, not a required step
-In Opinion/Critique posts (Pattern F, see `02_post_structure.md`), LogAid may not appear at all — the post can end on the thesis alone. When it does appear, it comes AFTER the problem is established and only when the belief being defended (see `06_point_of_view.md`) genuinely demands a practical consequence. It is never the premise, and never a mandatory closing step just to justify the post's existence.  
-Bad: *„LogAid löst dieses Problem mit unserem innovativen Ansatz..."*  
-Good: *„Genau deshalb bauen wir LogAid auf Datenhoheit..."*  
+In Opinion/Critique posts (Pattern F, see `02_post_structure.md`), Frachtwerk may not appear at all — the post can end on the thesis alone. When it does appear, it comes AFTER the problem is established and only when the belief being defended (see `06_point_of_view.md`) genuinely demands a practical consequence. It is never the premise, and never a mandatory closing step just to justify the post's existence.  
+Bad: *„Frachtwerk löst dieses Problem mit unserem innovativen Ansatz..."*  
+Good: *„Genau deshalb bauen wir Frachtwerk auf Datenhoheit..."*  
 Also good — no product mention at all, post ends on the aphorism defending the belief.
 
 ### 5. Never explain the metaphor
@@ -50,7 +50,7 @@ A content-marketing post frames a trend neutrally. An opinion post names what th
 
 ## Forbidden Phrases
 
-These words and constructions must never appear in LogAid posts:
+These words and constructions must never appear in Frachtwerk posts:
 
 | Forbidden | Why | Alternative |
 |---|---|---|
@@ -67,13 +67,13 @@ These words and constructions must never appear in LogAid posts:
 
 ### Institutional filler (distinct from marketing buzzwords above)
 
-These don't sound like jargon, but they still signal "corporate announcement" instead of "opinion" — they make LogAid sound like it's talking about itself rather than about the market:
+These don't sound like jargon, but they still signal "corporate announcement" instead of "opinion" — they make Frachtwerk sound like it's talking about itself rather than about the market:
 
 | Avoid | Why | Use instead |
 |---|---|---|
 | „unsere Mission ist es..." | mission-statement register, not opinion | state the belief directly, no framing device |
 | „wir sind stolz darauf..." | self-congratulatory | cut it — let the fact stand alone |
-| „unser Ansatz..." | abstracts away from the concrete claim | name what LogAid actually does or believes |
+| „unser Ansatz..." | abstracts away from the concrete claim | name what Frachtwerk actually does or believes |
 | „wir helfen Ihnen dabei, ..." | service-provider framing, weakens the stance | say what's wrong with the status quo first |
 | „wir freuen uns, dass..." | announcement tone | lead with the substance |
 
@@ -92,7 +92,7 @@ These don't sound like jargon, but they still signal "corporate announcement" in
 
 ---
 
-## What LogAid Never Does
+## What Frachtwerk Never Does
 
 - Never punches down at competitors by name
 - Never uses AI hype language ("ChatGPT", "large language model") without grounding it in a dispatcher's daily reality
