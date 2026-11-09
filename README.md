@@ -276,6 +276,44 @@ The LinkedIn publisher (`engine-api/linkedin.py`) is implemented but **disabled 
 
 ---
 
+## Offline-Friendly Remote Trigger
+
+A Cloudflare Worker + KV queue (`cloudflare-worker/`) lets a teammate trigger the pipeline
+(click "Posts generieren") even while the host machine is off. The request waits in the Worker's
+KV store until `engine-api`'s poller (`queue_poller.py`) picks it up once the host is back online,
+runs the batch, and reports the result back. The engine-api ↔ Worker routes
+(`/api/pending`, `/api/complete`) are authenticated via a shared-secret header
+(`X-Queue-Secret`).
+
+A lightweight static dashboard (`cloudflare-dashboard/`, no build step) gives a non-technical
+teammate a review queue UI — filter, edit, approve, reject, trigger a run — without local access
+to the Streamlit app. It talks to `engine-api` directly through a free Cloudflare Quick Tunnel
+(`cloudflared` in `docker-compose.yml`), so unlike the trigger button it needs the host online.
+Because the Quick Tunnel hostname changes on every restart, `tunnel_reporter.py` pushes the
+current URL to the same Worker's KV, and the dashboard discovers it on load — the link given to
+the teammate never changes.
+
+See `cloudflare-worker/README.md` for deploy steps (Cloudflare account required).
+
+---
+
+## Product Decisions
+
+- **DE/EU-only sources.** International feeds (FreightWaves, Transport Topics) were dropped to
+  keep the scope on the German/EU market; feeds are interleaved round-robin so `MAX_ARTICLES`
+  isn't exhausted by trade press before institutional sources (Destatis, EUR-Lex, …) get a turn.
+- **Discard, don't flag, promotional posts.** Posts that read like PR for a third party are
+  dropped before reaching the review queue instead of being flagged for manual triage — a clean
+  queue was preferred over reviewing false positives (see "Anti-Propaganda / Critical Distance").
+- **Rejections teach the model.** Rejecting a post requires a reason; rejected posts are embedded
+  into a separate ChromaDB collection and retrieved as "patterns to avoid" for similar articles.
+- **No public ports.** All services bind to `127.0.0.1`; public access goes only through the
+  `cloudflared` tunnel.
+- **Human stays in the loop on LinkedIn.** Auto-publishing is off by default and, when enabled,
+  pushes approved posts as LinkedIn *drafts* — a person always clicks "publish".
+
+---
+
 ## Troubleshooting
 
 **Ollama not responding:**
