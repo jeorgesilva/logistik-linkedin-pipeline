@@ -1,184 +1,186 @@
 # Logistik LinkedIn Pipeline
 
-Self-hosted, 24/7 content pipeline that turns German logistics news into LinkedIn drafts automatically.
+Selbst gehostete Content-Pipeline, rund um die Uhr in Betrieb, die deutsche Logistik-News automatisch in LinkedIn-Entwürfe verwandelt.
 
-**Daily at 06:00 (Berlin time):**
-1. Reads from curated RSS feeds — German trade press (Logistik Heute, Logistra, Logistik News24) + DE/EU institutional (Destatis, Bundesnetzagentur, BALM, EUR-Lex, DG MOVE)
-2. Deduplicates and selects top articles (TF-IDF ranking)
-3. Filters by relevance using an Ollama LLM agent
-4. Extracts full article text (trafilatura + crawl4ai fallback)
-5. Builds a narrative bridge between the news event and a Spedition's daily reality (discards articles with no concrete, defensible impact)
-6. Runs 2 Ollama LLM agents: German post writer + image-prompt generator. Post writer uses RAG: retrieves similar approved posts + style guide chunks from ChromaDB
-7. Checks the generated post for promotional tone toward third-party companies — auto-discarded if it reads like advertising/PR for someone other than LogAid (see "Anti-Propaganda / Critical Distance" below)
-8. Generates LinkedIn header images via Pollinations.ai (free, no API key)
-9. Stores drafts in SQLite → surfaces them in a Streamlit review queue
+**Täglich um 06:00 Uhr (Berliner Zeit):**
+1. Liest kuratierte RSS-Feeds — deutsche Fachpresse (Logistik Heute, Logistra, Logistik News24) + institutionelle Quellen DE/EU (Destatis, Bundesnetzagentur, BALM, EUR-Lex, DG MOVE)
+2. Entfernt Duplikate und wählt die relevantesten Artikel aus (TF-IDF-Ranking)
+3. Filtert nach Relevanz mit einem Ollama-LLM-Agenten
+4. Extrahiert den vollständigen Artikeltext (trafilatura, crawl4ai als Fallback)
+5. Baut eine erzählerische Brücke zwischen der Nachricht und dem Alltag einer Spedition (Artikel ohne konkrete, belastbare Auswirkung werden verworfen)
+6. Führt 2 Ollama-LLM-Agenten aus: deutscher Post-Writer + Bildprompt-Generator. Der Post-Writer nutzt RAG: ähnliche freigegebene Posts + Style-Guide-Abschnitte werden aus ChromaDB abgerufen
+7. Prüft den erzeugten Post auf werblichen Ton gegenüber Drittunternehmen — wird automatisch verworfen, wenn er wie Werbung/PR für jemand anderen als LogAid klingt (siehe „Anti-Propaganda / kritische Distanz“ unten)
+8. Erzeugt LinkedIn-Headerbilder über Pollinations.ai (kostenlos, kein API-Key)
+9. Speichert Entwürfe in SQLite → zeigt sie in einer Streamlit-Review-Queue an
 
 ---
 
-## Architecture
+## Architektur
 
 ```
-n8n (scheduler)
+n8n (Scheduler)
     └─► engine-api (FastAPI)
-            ├─► RSS feeds (curated logistics sources) ─ article discovery
-            ├─► Ollama — main LLM (host machine)         qwen2.5-coder:latest
-            ├─► Ollama — embed model (Docker)            nomic-embed-text
-            ├─► ChromaDB ─ RAG (approved posts + style guide)
-            ├─► Pollinations.ai (images)
+            ├─► RSS-Feeds (kuratierte Logistikquellen) ─ Artikelsuche
+            ├─► Ollama — Haupt-LLM (Host-Rechner)       qwen2.5-coder:latest
+            ├─► Ollama — Embedding-Modell (Docker)      nomic-embed-text
+            ├─► ChromaDB ─ RAG (freigegebene Posts + Style Guide)
+            ├─► Pollinations.ai (Bilder)
             └─► SQLite (posts.db)
 review-ui (Streamlit)
     └─► engine-api
 ```
 
-**Note on Ollama split:** In the default local setup, `OLLAMA_HOST` points to Ollama running natively on the host machine (better GPU/performance) while `OLLAMA_EMBED_HOST` points to the Dockerised Ollama service used for embeddings. On a cloud VM, set both to the same host.
+**Hinweis zur Ollama-Aufteilung:** Im Standard-Setup lokal zeigt `OLLAMA_HOST` auf ein nativ auf dem Host-Rechner laufendes Ollama (bessere GPU-Nutzung/Performance), während `OLLAMA_EMBED_HOST` auf den Ollama-Docker-Service für Embeddings zeigt. Auf einer Cloud-VM beide auf denselben Host setzen.
 
 ---
 
-## Quick Start (local)
+## Schnellstart (lokal)
 
 ```bash
 git clone <repo>
 cd logistik-linkedin-pipeline
 cp .env.template .env
-# Edit .env if needed (defaults are fine for first run)
+# .env bei Bedarf anpassen (die Standardwerte reichen für den ersten Start)
 
 docker compose up -d
 
-# Pull the writer model into your local Ollama (one-time)
+# Writer-Modell einmalig ins lokale Ollama laden
 ollama pull qwen2.5-coder:latest
 
-# nomic-embed-text is pulled automatically by ollama-model-init on first docker compose up
+# nomic-embed-text wird beim ersten docker compose up automatisch von ollama-model-init geladen
 
-# Verify all services are healthy
+# Prüfen, ob alle Services healthy sind
 docker compose ps
 
-# Test end-to-end (without waiting for n8n schedule)
+# End-to-End testen (ohne auf den n8n-Zeitplan zu warten)
 curl -X POST http://localhost:8000/run
 ```
 
-Then open http://localhost:8503 to see drafts in the review queue.
+Danach http://localhost:8503 öffnen, um die Entwürfe in der Review-Queue zu sehen.
 
-### KB Bootstrap (first time only)
+### KB-Bootstrap (nur beim ersten Mal)
 
-After the stack is up, seed the Knowledge Base with the 5 approved example posts so RAG is active from the start:
+Sobald der Stack läuft, die Knowledge Base mit den 5 freigegebenen Beispielposts befüllen, damit RAG von Anfang an aktiv ist:
 
 ```bash
 docker exec engine-api python ingest_seed_posts.py
 ```
 
-This inserts 5 LogAid-style posts into SQLite as `approved` and embeds them into ChromaDB. RAG activates automatically once `KB_MIN_EXAMPLES` (default: 3) approved posts are present.
+Das legt 5 Posts im LogAid-Stil als `approved` in SQLite an und bettet sie in ChromaDB ein. RAG wird automatisch aktiv, sobald `KB_MIN_EXAMPLES` (Standard: 3) freigegebene Posts vorhanden sind.
 
 ---
 
 ## Services & Ports
 
-| Service | External Port | URL |
+| Service | Externer Port | URL |
 |---|---|---|
 | engine-api | 8000 | http://localhost:8000 |
 | review-ui (Streamlit) | 8503 | http://localhost:8503 |
 | n8n | 5678 | http://localhost:5678 |
-| ollama (embed) | internal only | — |
+| ollama (Embedding) | nur intern | — |
 
 ---
 
-## n8n Setup
+## n8n einrichten
 
-1. Open http://localhost:5678 (login: `N8N_USER` / `N8N_PASSWORD` from `.env`)
-2. Go to **Workflows → Import from File**
-3. Import `n8n/content_pipeline.workflow.json`
-4. **Activate** the workflow — it will run daily at 06:00 Berlin time
-5. To test immediately: click **Execute Workflow**
+1. http://localhost:5678 öffnen (Login: `N8N_USER` / `N8N_PASSWORD` aus `.env`)
+2. **Workflows → Import from File** wählen
+3. `n8n/content_pipeline.workflow.json` importieren
+4. Den Workflow **aktivieren** — er läuft dann täglich um 06:00 Uhr Berliner Zeit
+5. Zum sofortigen Testen: **Execute Workflow** klicken
 
 ---
 
-## Configuration (`.env`)
+## Konfiguration (`.env`)
 
-All settings are in `.env` (copy from `.env.template`):
+Alle Einstellungen stehen in `.env` (Kopie von `.env.template`):
 
-| Variable | Default | Description |
+| Variable | Standard | Beschreibung |
 |---|---|---|
-| `OLLAMA_HOST` | `http://host.docker.internal:11434` | Ollama for main LLM (host machine in local dev) |
-| `OLLAMA_EMBED_HOST` | `http://ollama:11434` | Ollama for embeddings (Docker service) |
-| `OLLAMA_WRITER_MODEL` | `qwen2.5-coder:latest` | LLM for German post writing |
-| `OLLAMA_IMAGE_PROMPT_MODEL` | `qwen2.5-coder:latest` | LLM for image-prompt generation |
-| `OLLAMA_REQUEST_TIMEOUT` | `600` | Seconds before LLM call times out |
-| `MAX_ARTICLES` | `10` | Max articles selected per pipeline run |
-| `EMBED_MODEL` | `nomic-embed-text` | Ollama model used for ChromaDB embeddings |
-| `KB_PATH` | `/data/chroma` | ChromaDB persistence path |
-| `KB_MIN_EXAMPLES` | `3` | Minimum approved posts for RAG to activate |
-| `STYLE_GUIDE_PATH` | `/data/style_guide` | Path to style guide `.md` files |
-| `IMAGE_WIDTH/HEIGHT` | `1200/627` | LinkedIn header image size |
-| `IMAGE_MODEL` | `flux` | Pollinations.ai model |
-| `LINKEDIN_ENABLED` | `false` | Enable LinkedIn auto-publishing (Phase 2) |
+| `OLLAMA_HOST` | `http://host.docker.internal:11434` | Ollama für das Haupt-LLM (Host-Rechner in der lokalen Entwicklung) |
+| `OLLAMA_EMBED_HOST` | `http://ollama:11434` | Ollama für Embeddings (Docker-Service) |
+| `OLLAMA_WRITER_MODEL` | `qwen2.5-coder:latest` | LLM für das Schreiben der deutschen Posts |
+| `OLLAMA_IMAGE_PROMPT_MODEL` | `qwen2.5-coder:latest` | LLM für die Bildprompt-Erzeugung |
+| `OLLAMA_REQUEST_TIMEOUT` | `600` | Sekunden bis zum Timeout eines LLM-Aufrufs |
+| `MAX_ARTICLES` | `10` | Maximale Anzahl ausgewählter Artikel pro Pipeline-Lauf |
+| `EMBED_MODEL` | `nomic-embed-text` | Ollama-Modell für die ChromaDB-Embeddings |
+| `KB_PATH` | `/data/chroma` | Persistenzpfad von ChromaDB |
+| `KB_MIN_EXAMPLES` | `3` | Mindestanzahl freigegebener Posts, ab der RAG aktiv wird |
+| `STYLE_GUIDE_PATH` | `/data/style_guide` | Pfad zu den `.md`-Dateien des Style Guides |
+| `IMAGE_WIDTH/HEIGHT` | `1200/627` | Größe des LinkedIn-Headerbilds |
+| `IMAGE_MODEL` | `flux` | Pollinations.ai-Modell |
+| `LINKEDIN_ENABLED` | `false` | Automatische Veröffentlichung auf LinkedIn aktivieren (Phase 2) |
 
 ---
 
 ## Knowledge Base (RAG)
 
-Posts are generated with retrieval-augmented generation using two ChromaDB collections:
+Posts werden per Retrieval-Augmented Generation mit zwei ChromaDB-Collections erzeugt:
 
-| Collection | Content | Updated by |
+| Collection | Inhalt | Aktualisiert durch |
 |---|---|---|
-| `style_examples` | Approved posts (embedded as title + text) | Auto on PATCH `status=approved`; "Sync" button in UI |
-| `style_guidelines` | Style guide chunks (split by `##` section) | Auto on startup; "Reload Style Guide" button in UI |
+| `style_examples` | Freigegebene Posts (eingebettet als Titel + Text) | Automatisch bei PATCH `status=approved`; „Sync“-Button in der UI |
+| `style_guidelines` | Style-Guide-Abschnitte (aufgeteilt nach `##`-Überschriften) | Automatisch beim Start; „Reload Style Guide“-Button in der UI |
 
-**RAG flow:**
+**RAG-Ablauf:**
 ```
-New article → embed(title + text[:300]) via nomic-embed-text
-           → top-2 similar approved posts + top-2 style guide chunks
-           → injected into qwen2.5 prompt as context
+Neuer Artikel → embed(Titel + Text[:300]) via nomic-embed-text
+             → Top-2 ähnliche freigegebene Posts + Top-2 Style-Guide-Abschnitte
+             → als Kontext in den qwen2.5-Prompt eingefügt
 ```
 
-RAG is silently skipped if ChromaDB has fewer than `KB_MIN_EXAMPLES` approved posts, Ollama is unavailable, or ChromaDB errors. The pipeline runs normally regardless.
+RAG wird stillschweigend übersprungen, wenn ChromaDB weniger als `KB_MIN_EXAMPLES` freigegebene Posts enthält, Ollama nicht erreichbar ist oder ChromaDB einen Fehler meldet. Die Pipeline läuft in jedem Fall normal weiter.
 
-**Style guide files** (`data/style_guide/`) are on a Docker volume — edit them directly on the host and click **Reload Style Guide** in the sidebar (or `POST /kb/reload-guidelines`). No rebuild needed.
+**Style-Guide-Dateien** (`data/style_guide/`) liegen auf einem Docker-Volume — direkt auf dem Host bearbeiten und in der Seitenleiste auf **Reload Style Guide** klicken (oder `POST /kb/reload-guidelines`). Kein Rebuild nötig.
 
 ---
 
-## Anti-Propaganda / Critical Distance
+## Anti-Propaganda / kritische Distanz
 
-When an article names a specific third-party company, the pipeline is designed to keep critical
-distance instead of echoing the source's praise:
+Wenn ein Artikel ein bestimmtes Drittunternehmen nennt, soll die Pipeline kritische Distanz
+wahren, statt das Lob der Quelle zu übernehmen:
 
-- **Prompt rules** (`engine-api/agents.py`, `_BRIDGE_SYSTEM` and `_WRITER_SYSTEM`): a named
-  third-party company (never LogAid) is treated only as an illustrative example of a broader
-  industry pattern — never as a protagonist or "success story". The writer is instructed to stay
-  analytical (risks, trade-offs, competitive implications) rather than complimentary.
-- **Automated check** (`evaluate_promotional_tone()` in `agents.py`, wired into
-  `pipeline.py:_process_articles`): after a post is generated, a dedicated LLM call classifies
-  whether it reads like independent analysis or like advertising/PR for a third party. LogAid's
-  own (brief, standard) mention at the end of every post is explicitly excluded from this check —
-  only promotional tone toward *other* companies triggers it.
-- **On a positive match, the post is discarded automatically** — same treatment as an invalid
-  narrative bridge. It never reaches the database or the review queue, and there is no persisted
-  flag for it (no `ad_risk` column). This was an explicit product decision (2026-07-16): favor a
-  clean review queue over surfacing false positives for manual triage.
+- **Prompt-Regeln** (`engine-api/agents.py`, `_BRIDGE_SYSTEM` und `_WRITER_SYSTEM`): Ein genanntes
+  Drittunternehmen (nie LogAid) dient nur als illustratives Beispiel für ein größeres
+  Branchenmuster — nie als Protagonist oder „Erfolgsgeschichte“. Der Writer ist angewiesen,
+  analytisch zu bleiben (Risiken, Zielkonflikte, Folgen für den Wettbewerb) statt lobend.
+- **Automatische Prüfung** (`evaluate_promotional_tone()` in `agents.py`, eingebunden in
+  `pipeline.py:_process_articles`): Nach der Erzeugung eines Posts klassifiziert ein eigener
+  LLM-Aufruf, ob er wie eine unabhängige Analyse oder wie Werbung/PR für ein Drittunternehmen
+  klingt. Die eigene (kurze, standardisierte) Erwähnung von LogAid am Ende jedes Posts ist von
+  dieser Prüfung ausdrücklich ausgenommen — nur werblicher Ton gegenüber *anderen* Unternehmen
+  löst sie aus.
+- **Bei einem Treffer wird der Post automatisch verworfen** — genauso wie bei einer ungültigen
+  erzählerischen Brücke. Er erreicht weder die Datenbank noch die Review-Queue, und es wird kein
+  Flag dafür gespeichert (keine Spalte `ad_risk`). Das war eine bewusste Produktentscheidung
+  (16.07.2026): eine saubere Review-Queue ist wichtiger, als False Positives zur manuellen
+  Sichtung vorzulegen.
 
 ---
 
-## API Endpoints (engine-api :8000)
+## API-Endpunkte (engine-api :8000)
 
-| Method | Path | Description |
+| Methode | Pfad | Beschreibung |
 |---|---|---|
-| GET | `/health` | Health check |
-| GET | `/posts` | List posts (`?status=draft`) |
-| GET | `/posts/{id}` | Single post |
-| POST | `/posts` | Create post manually |
-| PATCH | `/posts/{id}` | Update fields; `status=approved` auto-ingests into KB |
-| POST | `/posts/{id}/regenerate-text` | Re-extract article and regenerate text via LLM |
-| POST | `/posts/{id}/regenerate-image` | Regenerate image |
-| POST | `/posts/regenerate-missing-text` | Regenerate text for posts without text (background) |
-| POST | `/run` | Run full pipeline batch |
-| POST | `/collect` | Collect articles only, no post creation |
-| GET | `/kb/stats` | Count docs in KB collections; indicates if RAG is active |
-| POST | `/kb/sync` | Bulk-sync all approved posts into KB (background) |
-| POST | `/kb/reload-guidelines` | Re-ingest `/data/style_guide/` into KB (background) |
+| GET | `/health` | Health-Check |
+| GET | `/posts` | Posts auflisten (`?status=draft`) |
+| GET | `/posts/{id}` | Einzelner Post |
+| POST | `/posts` | Post manuell anlegen |
+| PATCH | `/posts/{id}` | Felder aktualisieren; `status=approved` übernimmt den Post automatisch in die KB |
+| POST | `/posts/{id}/regenerate-text` | Artikel neu extrahieren und Text per LLM neu erzeugen |
+| POST | `/posts/{id}/regenerate-image` | Bild neu erzeugen |
+| POST | `/posts/regenerate-missing-text` | Text für Posts ohne Text neu erzeugen (im Hintergrund) |
+| POST | `/run` | Kompletten Pipeline-Batch ausführen |
+| POST | `/collect` | Nur Artikel sammeln, keine Posts erzeugen |
+| GET | `/kb/stats` | Dokumente in den KB-Collections zählen; zeigt, ob RAG aktiv ist |
+| POST | `/kb/sync` | Alle freigegebenen Posts gesammelt in die KB synchronisieren (im Hintergrund) |
+| POST | `/kb/reload-guidelines` | `/data/style_guide/` neu in die KB einlesen (im Hintergrund) |
 
 ---
 
-## GCP Deployment
+## Deployment auf GCP
 
-### 1. Create VM
+### 1. VM anlegen
 
 ```bash
 gcloud compute instances create logistik-pipeline \
@@ -190,25 +192,25 @@ gcloud compute instances create logistik-pipeline \
   --boot-disk-type=pd-balanced
 ```
 
-| Tier | Machine type | RAM | Recommended model | ~Cost/mo |
+| Stufe | Maschinentyp | RAM | Empfohlenes Modell | ~Kosten/Monat |
 |---|---|---|---|---|
-| Best quality | `e2-standard-8` | 32 GB | `qwen2.5:32b` | ~$196 |
-| **Recommended** | **`e2-standard-4`** | **16 GB** | **`qwen2.5:14b-instruct`** | **~$98** |
-| Budget | `e2-standard-2` | 8 GB | `llama3.1:8b` | ~$49 |
+| Beste Qualität | `e2-standard-8` | 32 GB | `qwen2.5:32b` | ~196 $ |
+| **Empfohlen** | **`e2-standard-4`** | **16 GB** | **`qwen2.5:14b-instruct`** | **~98 $** |
+| Budget | `e2-standard-2` | 8 GB | `llama3.1:8b` | ~49 $ |
 
-Cut costs ~60–90% with Spot VMs or 1-year committed-use discounts.
+Mit Spot-VMs oder Rabatten für 1 Jahr zugesagte Nutzung (Committed Use) lassen sich die Kosten um ~60–90 % senken.
 
-### 2. Install Docker on VM
+### 2. Docker auf der VM installieren
 
 ```bash
 gcloud compute ssh logistik-pipeline --zone=europe-west3-a
 
-# On the VM:
+# Auf der VM:
 curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker $USER
 newgrp docker
 
-# Add swap (important for large models)
+# Swap anlegen (wichtig für große Modelle)
 sudo fallocate -l 8G /swapfile
 sudo chmod 600 /swapfile
 sudo mkswap /swapfile
@@ -216,137 +218,143 @@ sudo swapon /swapfile
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 ```
 
-### 3. Deploy
+### 3. Deployen
 
 ```bash
 git clone <repo> logistik-linkedin-pipeline
 cd logistik-linkedin-pipeline
 cp .env.template .env
-nano .env  # Set OLLAMA_HOST=http://ollama:11434 (same Docker network on VM), update N8N_PASSWORD
+nano .env  # OLLAMA_HOST=http://ollama:11434 setzen (gleiches Docker-Netzwerk auf der VM), N8N_PASSWORD ändern
 
 docker compose up -d
 
-# Pull models (takes 10–30 min)
+# Modelle laden (dauert 10–30 Min.)
 docker compose exec ollama ollama pull qwen2.5:14b-instruct
-# nomic-embed-text is pulled automatically
+# nomic-embed-text wird automatisch geladen
 
-docker compose ps  # All should be "healthy"
+docker compose ps  # Alle sollten „healthy“ sein
 
-# Seed the KB
+# KB befüllen
 docker exec engine-api python ingest_seed_posts.py
 ```
 
-### 4. Access via SSH Tunnel (recommended — keeps ports closed)
+### 4. Zugriff per SSH-Tunnel (empfohlen — Ports bleiben geschlossen)
 
 ```bash
 gcloud compute ssh logistik-pipeline --zone=europe-west3-a \
   -- -L 5678:localhost:5678 -L 8503:localhost:8503 -L 8000:localhost:8000
 ```
 
-Then open http://localhost:8503 (Streamlit) and http://localhost:5678 (n8n) locally.
+Danach lokal http://localhost:8503 (Streamlit) und http://localhost:5678 (n8n) öffnen.
 
-### 5. Stop VM to save money
+### 5. VM stoppen, um Kosten zu sparen
 
 ```bash
 gcloud compute instances stop logistik-pipeline --zone=europe-west3-a
-# Restart:
+# Neu starten:
 gcloud compute instances start logistik-pipeline --zone=europe-west3-a
 ```
 
 ---
 
-## Phase 2 — LinkedIn Auto-Publishing
+## Phase 2 — automatische Veröffentlichung auf LinkedIn
 
-The LinkedIn publisher (`engine-api/linkedin.py`) is implemented but **disabled by default** (`LINKEDIN_ENABLED=false`).
+Der LinkedIn-Publisher (`engine-api/linkedin.py`) ist implementiert, aber **standardmäßig deaktiviert** (`LINKEDIN_ENABLED=false`).
 
-**To enable:**
-1. Create a LinkedIn developer app at https://www.linkedin.com/developers/
-2. Request the `w_member_social` scope
-3. Complete OAuth 2.0 flow to get an access token (~60-day expiry)
-4. Set in `.env`:
+**Aktivieren:**
+1. Unter https://www.linkedin.com/developers/ eine LinkedIn-Developer-App anlegen
+2. Den Scope `w_member_social` beantragen
+3. Den OAuth-2.0-Flow durchlaufen, um ein Access Token zu erhalten (Gültigkeit ~60 Tage)
+4. In `.env` setzen:
    ```
    LINKEDIN_ENABLED=true
    LINKEDIN_ACCESS_TOKEN=your_token_here
    LINKEDIN_AUTHOR_URN=urn:li:person:your_id
    ```
-5. Approved posts are pushed as **DRAFT** to LinkedIn (you publish manually)
+5. Freigegebene Posts werden als **ENTWURF** (DRAFT) an LinkedIn übertragen (veröffentlicht wird manuell)
 
-**Rate limits:** ~10–100 posts/day. Publishing as DRAFT is the safe posture vs. LinkedIn ToS.
-**Token refresh:** Access tokens expire; renew manually every ~60 days.
-
----
-
-## Offline-Friendly Remote Trigger
-
-A Cloudflare Worker + KV queue (`cloudflare-worker/`) lets a teammate trigger the pipeline
-(click "Posts generieren") even while the host machine is off. The request waits in the Worker's
-KV store until `engine-api`'s poller (`queue_poller.py`) picks it up once the host is back online,
-runs the batch, and reports the result back. The engine-api ↔ Worker routes
-(`/api/pending`, `/api/complete`) are authenticated via a shared-secret header
-(`X-Queue-Secret`).
-
-A lightweight static dashboard (`cloudflare-dashboard/`, no build step) gives a non-technical
-teammate a review queue UI — filter, edit, approve, reject, trigger a run — without local access
-to the Streamlit app. It talks to `engine-api` directly through a free Cloudflare Quick Tunnel
-(`cloudflared` in `docker-compose.yml`), so unlike the trigger button it needs the host online.
-Because the Quick Tunnel hostname changes on every restart, `tunnel_reporter.py` pushes the
-current URL to the same Worker's KV, and the dashboard discovers it on load — the link given to
-the teammate never changes.
-
-See `cloudflare-worker/README.md` for deploy steps (Cloudflare account required).
+**Rate-Limits:** ~10–100 Posts/Tag. Die Veröffentlichung als Entwurf ist im Hinblick auf die LinkedIn-Nutzungsbedingungen die sichere Variante.
+**Token-Erneuerung:** Access Tokens laufen ab; etwa alle 60 Tage manuell erneuern.
 
 ---
 
-## Product Decisions
+## Fernauslösung auch bei ausgeschaltetem Rechner
 
-- **DE/EU-only sources.** International feeds (FreightWaves, Transport Topics) were dropped to
-  keep the scope on the German/EU market; feeds are interleaved round-robin so `MAX_ARTICLES`
-  isn't exhausted by trade press before institutional sources (Destatis, EUR-Lex, …) get a turn.
-- **Discard, don't flag, promotional posts.** Posts that read like PR for a third party are
-  dropped before reaching the review queue instead of being flagged for manual triage — a clean
-  queue was preferred over reviewing false positives (see "Anti-Propaganda / Critical Distance").
-- **Rejections teach the model.** Rejecting a post requires a reason; rejected posts are embedded
-  into a separate ChromaDB collection and retrieved as "patterns to avoid" for similar articles.
-- **No public ports.** All services bind to `127.0.0.1`; public access goes only through the
-  `cloudflared` tunnel.
-- **Human stays in the loop on LinkedIn.** Auto-publishing is off by default and, when enabled,
-  pushes approved posts as LinkedIn *drafts* — a person always clicks "publish".
+Eine Warteschlange aus Cloudflare Worker + KV (`cloudflare-worker/`) ermöglicht es einem
+Teammitglied, die Pipeline auszulösen (Klick auf „Posts generieren“), auch wenn der Host-Rechner
+ausgeschaltet ist. Die Anfrage wartet im KV-Store des Workers, bis der Poller von `engine-api`
+(`queue_poller.py`) sie abholt, sobald der Host wieder online ist, den Batch ausführt und das
+Ergebnis zurückmeldet. Die Routen zwischen engine-api und Worker
+(`/api/pending`, `/api/complete`) sind über einen Header mit gemeinsamem Geheimnis
+(`X-Queue-Secret`) authentifiziert.
+
+Ein schlankes statisches Dashboard (`cloudflare-dashboard/`, ohne Build-Schritt) bietet einem
+nicht-technischen Teammitglied eine Review-Queue-Oberfläche — filtern, bearbeiten, freigeben,
+ablehnen, Lauf auslösen — ohne lokalen Zugriff auf die Streamlit-App. Es spricht über einen
+kostenlosen Cloudflare Quick Tunnel (`cloudflared` in `docker-compose.yml`) direkt mit
+`engine-api` und braucht daher — anders als der Auslöse-Button — einen laufenden Host. Da sich
+der Hostname des Quick Tunnels bei jedem Neustart ändert, überträgt `tunnel_reporter.py` die
+aktuelle URL in den KV-Store desselben Workers, und das Dashboard ermittelt sie beim Laden — der
+Link, den das Teammitglied bekommt, ändert sich nie.
+
+Die Deploy-Schritte stehen in `cloudflare-worker/README.md` (Cloudflare-Konto erforderlich).
 
 ---
 
-## Troubleshooting
+## Produktentscheidungen
 
-**Ollama not responding:**
+- **Nur Quellen aus DE/EU.** Internationale Feeds (FreightWaves, Transport Topics) wurden
+  entfernt, um den Fokus auf den deutschen/europäischen Markt zu legen; die Feeds werden im
+  Round-Robin-Verfahren verschränkt, damit `MAX_ARTICLES` nicht schon von der Fachpresse
+  ausgeschöpft wird, bevor institutionelle Quellen (Destatis, EUR-Lex, …) an der Reihe sind.
+- **Werbliche Posts verwerfen statt markieren.** Posts, die wie PR für ein Drittunternehmen
+  klingen, werden verworfen, bevor sie die Review-Queue erreichen, statt zur manuellen Sichtung
+  markiert zu werden — eine saubere Queue wurde dem Prüfen von False Positives vorgezogen (siehe
+  „Anti-Propaganda / kritische Distanz“).
+- **Ablehnungen trainieren das Modell.** Wer einen Post ablehnt, muss einen Grund angeben;
+  abgelehnte Posts werden in eine eigene ChromaDB-Collection eingebettet und bei ähnlichen
+  Artikeln als „zu vermeidende Muster“ abgerufen.
+- **Keine öffentlichen Ports.** Alle Services binden an `127.0.0.1`; öffentlicher Zugriff läuft
+  ausschließlich über den `cloudflared`-Tunnel.
+- **Bei LinkedIn bleibt der Mensch in der Verantwortung.** Die automatische Veröffentlichung ist
+  standardmäßig aus und überträgt freigegebene Posts, wenn aktiviert, als LinkedIn-*Entwürfe* —
+  auf „Veröffentlichen“ klickt immer ein Mensch.
+
+---
+
+## Fehlerbehebung
+
+**Ollama antwortet nicht:**
 ```bash
 docker compose logs ollama
 docker compose exec ollama ollama list
 ```
 
-**No articles collected:**
+**Keine Artikel gesammelt:**
 ```bash
 docker compose logs engine-api | grep -E "RSS|articles"
-# Check feed availability manually
+# Erreichbarkeit eines Feeds manuell prüfen
 curl -s https://logistik-heute.de/rss.xml | head -50
 ```
 
-**Articles returning empty full_text:**
-- Some paywalled sites won't extract; RSS summary is used as fallback
-- Check: `docker compose logs engine-api | grep "Full text extracted"`
+**Artikel mit leerem full_text:**
+- Manche Seiten mit Paywall lassen sich nicht extrahieren; dann wird die RSS-Zusammenfassung als Fallback verwendet
+- Prüfen: `docker compose logs engine-api | grep "Full text extracted"`
 
-**Images not generating:**
-- Pollinations.ai is free but rate-limited; retries are built-in
-- Check: `docker compose logs engine-api | grep -i image`
+**Bilder werden nicht erzeugt:**
+- Pollinations.ai ist kostenlos, aber rate-limitiert; Wiederholungsversuche sind eingebaut
+- Prüfen: `docker compose logs engine-api | grep -i image`
 
-**RAG not active (yellow indicator in UI):**
-- Need at least `KB_MIN_EXAMPLES` (default: 3) approved posts in ChromaDB
-- Run `docker exec engine-api python ingest_seed_posts.py` to seed with 5 example posts
-- Check: `curl http://localhost:8000/kb/stats`
+**RAG nicht aktiv (gelbe Anzeige in der UI):**
+- Es werden mindestens `KB_MIN_EXAMPLES` (Standard: 3) freigegebene Posts in ChromaDB benötigt
+- `docker exec engine-api python ingest_seed_posts.py` ausführen, um 5 Beispielposts anzulegen
+- Prüfen: `curl http://localhost:8000/kb/stats`
 
-**n8n workflow not triggering:**
-- Ensure workflow is **activated** (green toggle in n8n UI)
-- Check timezone is `Europe/Berlin` in n8n settings
+**n8n-Workflow startet nicht:**
+- Sicherstellen, dass der Workflow **aktiviert** ist (grüner Schalter in der n8n-UI)
+- Prüfen, ob in den n8n-Einstellungen die Zeitzone `Europe/Berlin` gesetzt ist
 
-**Reset everything:**
+**Alles zurücksetzen:**
 ```bash
 docker compose down
 rm -f data/posts.db data/images/*.jpg
@@ -357,7 +365,7 @@ docker exec engine-api python ingest_seed_posts.py
 
 ---
 
-## Development (without Docker)
+## Entwicklung (ohne Docker)
 
 ```bash
 cd engine-api
@@ -370,7 +378,7 @@ export KB_PATH=./dev_chroma
 export STYLE_GUIDE_PATH=../data/style_guide
 uvicorn main:app --reload --port 8000
 
-# Run tests
+# Tests ausführen
 pip install pytest
 pytest tests/
 ```
