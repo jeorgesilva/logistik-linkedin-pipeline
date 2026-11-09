@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import os
 from pathlib import Path
-from typing import Optional
 
 import chromadb
 import requests
@@ -19,7 +18,7 @@ STYLE_GUIDE_PATH = os.getenv("STYLE_GUIDE_PATH", "/data/style_guide")
 
 _EMBED_TIMEOUT = 60
 
-_client: Optional[chromadb.PersistentClient] = None
+_client: chromadb.PersistentClient | None = None
 _examples_col = None
 _guidelines_col = None
 _rejected_col = None

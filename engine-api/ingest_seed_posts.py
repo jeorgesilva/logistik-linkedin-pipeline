@@ -4,8 +4,8 @@ Run once inside the engine-api container after first build:
     docker exec engine-api python ingest_seed_posts.py
 """
 
-import sys
 import os
+import sys
 
 # Ensure the module path is correct when run inside the container
 sys.path.insert(0, os.path.dirname(__file__))

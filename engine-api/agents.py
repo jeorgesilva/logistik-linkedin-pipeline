@@ -2,7 +2,6 @@ import json
 import logging
 import os
 import re
-from typing import Optional
 
 import requests
 
@@ -260,7 +259,7 @@ supply chains, etc. as fits the topic); editorial/photographic, modern, neutral 
 Answer ONLY as JSON: {"image_prompt": "..."}."""
 
 
-def _extract_json(text: str, key: str) -> Optional[str]:
+def _extract_json(text: str, key: str) -> str | None:
     """Try to extract {key: value} from potentially messy LLM output."""
     try:
         data = json.loads(text)
@@ -281,7 +280,7 @@ def _extract_json(text: str, key: str) -> Optional[str]:
     return None
 
 
-def _parse_json_obj(text: str, required_keys: list) -> Optional[dict]:
+def _parse_json_obj(text: str, required_keys: list) -> dict | None:
     """Parse a JSON object from LLM output, validating all required keys are present."""
     try:
         data = json.loads(text)
@@ -351,7 +350,7 @@ def _build_kb_context(article: dict) -> str:
     return ""
 
 
-def evaluate_relevance(article: dict) -> Optional[dict]:
+def evaluate_relevance(article: dict) -> dict | None:
     """Step 1: Check if article has concrete relevance for a Spedition.
 
     Returns {"relevante": bool, "motivo": str} or None on failure.
@@ -373,7 +372,7 @@ def evaluate_relevance(article: dict) -> Optional[dict]:
     return None
 
 
-def evaluate_promotional_tone(post_text: str) -> Optional[dict]:
+def evaluate_promotional_tone(post_text: str) -> dict | None:
     """Step 4 (post-generation): flag posts that read as advertising for a third party."""
     required = ["soa_como_ad", "motivo"]
     for attempt in range(2):
@@ -427,7 +426,7 @@ def _brainstorm_angles(article: dict, relevance_motivo: str = "") -> list[dict]:
     return []
 
 
-def _select_best_angle(article: dict, angles: list[dict]) -> Optional[dict]:
+def _select_best_angle(article: dict, angles: list[dict]) -> dict | None:
     """Etapa 2b: critically compare the candidate angles and pick/sharpen the strongest.
 
     Returns the winning angle dict, {"invalid": True, ...} if none are defensible,
@@ -454,7 +453,7 @@ def _select_best_angle(article: dict, angles: list[dict]) -> Optional[dict]:
     return None
 
 
-def build_bridge(article: dict, relevance_motivo: str = "") -> Optional[dict]:
+def build_bridge(article: dict, relevance_motivo: str = "") -> dict | None:
     """Step 2: Build narrative bridge between the news event and Spedition reality.
 
     Two-stage process — brainstorm 3 candidate angles (divergent), then critically
@@ -502,7 +501,7 @@ def build_bridge(article: dict, relevance_motivo: str = "") -> Optional[dict]:
     return data
 
 
-def _format_bridge_context(bridge: Optional[dict]) -> str:
+def _format_bridge_context(bridge: dict | None) -> str:
     if not bridge:
         return ""
     crenca = bridge.get("crenca_aplicada", "") or "(keine — rein informativ behandeln, kein Argument erzwingen)"
@@ -525,7 +524,7 @@ def _find_forbidden_phrases(text: str) -> list[str]:
     ]
 
 
-def _draft_argument(article: dict, bridge: Optional[dict], kb_context: str) -> str:
+def _draft_argument(article: dict, bridge: dict | None, kb_context: str) -> str:
     """Etapa 3a: draft only the argument paragraph — the substantive core.
 
     A short first attempt gets a *targeted* retry (previous draft + its actual
@@ -574,7 +573,7 @@ def _draft_argument(article: dict, bridge: Optional[dict], kb_context: str) -> s
     return ""
 
 
-def _frame_post(article: dict, bridge: Optional[dict], argument_text: str, kb_context: str) -> Optional[dict]:
+def _frame_post(article: dict, bridge: dict | None, argument_text: str, kb_context: str) -> dict | None:
     """Etapa 3b: build hook/pivot/closing/hashtags around the finished argument."""
     user_msg = (
         f"{kb_context}"
@@ -608,7 +607,7 @@ def _assemble_post(frame: dict, argument_text: str) -> str:
     return f"{body}\n\n{hashtags_line}".strip() if hashtags_line else body
 
 
-def _revise_post(article: dict, post_text: str) -> Optional[dict]:
+def _revise_post(article: dict, post_text: str) -> dict | None:
     """Etapa 3c: real revision pass — coherence, length, forbidden phrases.
 
     Python computes word count and scans for forbidden phrases beforehand and
@@ -618,7 +617,7 @@ def _revise_post(article: dict, post_text: str) -> Optional[dict]:
     blindly — a model asked to remove a phrase isn't guaranteed to actually do it.
     """
     current_text = post_text
-    last_result: Optional[dict] = None
+    last_result: dict | None = None
     required = ["post_text", "changed"]
     for attempt in range(2):
         word_count = len(current_text.split())
@@ -651,7 +650,7 @@ def _revise_post(article: dict, post_text: str) -> Optional[dict]:
     return last_result
 
 
-def generate_post(article: dict, bridge: Optional[dict] = None) -> str:
+def generate_post(article: dict, bridge: dict | None = None) -> str:
     """Agent 1: produce a German LinkedIn post for the article.
 
     Three-stage process mirroring how a human drafts an argumentative text: draft
@@ -709,4 +708,4 @@ def generate_image_prompt(article: dict, post_text: str) -> str:
             logger.warning("Agent 2 parse failed (attempt %d): %s", attempt + 1, raw[:200])
         except Exception as e:
             logger.error("Agent 2 error (attempt %d): %s", attempt + 1, e)
-    return f"Professional logistics scene, German supply chain, editorial style, 16:9, no text"
+    return "Professional logistics scene, German supply chain, editorial style, 16:9, no text"

@@ -4,7 +4,6 @@ import logging
 import os
 import re
 from itertools import zip_longest
-from typing import Optional
 
 import feedparser
 
@@ -111,7 +110,7 @@ def _get_feed_configs() -> list[dict]:
     return _parse_feed_configs(raw) if raw.strip() else _DEFAULT_FEEDS
 
 
-def fetch_rss_feeds(feed_configs: Optional[list[dict]] = None) -> list[dict]:
+def fetch_rss_feeds(feed_configs: list[dict] | None = None) -> list[dict]:
     """Fetch all configured RSS feeds and return normalised article dicts,
     interleaved round-robin across feeds (one article per feed per round).
 

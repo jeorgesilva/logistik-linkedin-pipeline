@@ -1,8 +1,7 @@
 import os
 import sqlite3
 from contextlib import contextmanager
-from datetime import datetime
-from typing import Optional
+from datetime import UTC, datetime
 
 DB_PATH = os.getenv("DB_PATH", "/data/posts.db")
 
@@ -76,7 +75,7 @@ def insert_post(
         return cur.lastrowid
 
 
-def list_posts(status: Optional[str] = None) -> list[dict]:
+def list_posts(status: str | None = None) -> list[dict]:
     with _conn() as con:
         if status:
             rows = con.execute(
@@ -89,7 +88,7 @@ def list_posts(status: Optional[str] = None) -> list[dict]:
         return [dict(r) for r in rows]
 
 
-def get_post(post_id: int) -> Optional[dict]:
+def get_post(post_id: int) -> dict | None:
     with _conn() as con:
         row = con.execute("SELECT * FROM posts WHERE id = ?", (post_id,)).fetchone()
         return dict(row) if row else None
@@ -106,7 +105,7 @@ def source_url_exists(source_url: str) -> bool:
 def update_post(post_id: int, **fields) -> bool:
     if not fields:
         return False
-    fields["updated_at"] = datetime.utcnow().isoformat()
+    fields["updated_at"] = datetime.now(UTC).isoformat()
     set_clause = ", ".join(f"{k} = ?" for k in fields)
     values = list(fields.values()) + [post_id]
     with _conn() as con:
