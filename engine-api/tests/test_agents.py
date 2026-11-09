@@ -149,7 +149,7 @@ def test_generate_post_falls_back_to_unrevised_draft_when_revision_fails():
 def test_generate_post_discards_if_still_short_after_revision():
     draft_raw = json.dumps({"argument_text": _dummy_argument(70)})
     frame_raw = _frame_response()
-    short_revised = "Kurz. " * 20  # 20 words, well under MIN_POST_WORDS
+    short_revised = "Kurz. " * 20  # 20 Wörter, deutlich unter MIN_POST_WORDS
     revise_raw = json.dumps({"post_text": short_revised, "changed": False, "motivo": ""})
     with patch("agents._chat", side_effect=[draft_raw, frame_raw, revise_raw]):
         result = generate_post({"title": "x", "full_text": "y"})

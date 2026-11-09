@@ -1,20 +1,20 @@
-"""Bootstrap script — inserts approved seed posts into SQLite and the KB.
+"""Bootstrap-Skript — legt freigegebene Seed-Posts in SQLite und in der KB an.
 
-Run once inside the engine-api container after first build:
+Einmalig im engine-api-Container nach dem ersten Build ausführen:
     docker exec engine-api python ingest_seed_posts.py
 """
 
 import os
 import sys
 
-# Ensure the module path is correct when run inside the container
+# Sicherstellen, dass der Modulpfad stimmt, wenn das Skript im Container läuft
 sys.path.insert(0, os.path.dirname(__file__))
 
 import db
 import kb
 
 # ---------------------------------------------------------------------------
-# Seed posts — cleaned (LinkedIn URL artefacts removed)
+# Seed-Posts — bereinigt (LinkedIn-URL-Artefakte entfernt)
 # ---------------------------------------------------------------------------
 
 SEED_POSTS = [
@@ -166,7 +166,7 @@ def main():
     print(f"Ingesting {len(SEED_POSTS)} seed posts into SQLite + KB...\n")
 
     for i, p in enumerate(SEED_POSTS, 1):
-        # Insert into SQLite as an approved post (skip if source_url already exists)
+        # Als freigegebenen Post in SQLite anlegen (überspringen, wenn source_url schon existiert)
         post_id = db.insert_post(
             topic=p["topic"],
             source_url=p.get("source_url", ""),
@@ -176,7 +176,7 @@ def main():
         )
         print(f"[{i}/{len(SEED_POSTS)}] SQLite → post_id={post_id}: {p['title'][:60]}")
 
-        # Ingest into ChromaDB KB
+        # In die ChromaDB-KB einlesen
         ok = kb.ingest_post(
             post_id=post_id,
             topic=p["topic"],

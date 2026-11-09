@@ -43,7 +43,7 @@ def api_post(path: str, body: dict = None):
         return None
 
 
-# --- Sidebar ---
+# --- Seitenleiste ---
 st.sidebar.title("📦 Logistik Pipeline")
 st.sidebar.markdown("**Review Queue**")
 
@@ -94,11 +94,11 @@ if st.sidebar.button("📚 Reload Style Guide"):
     if result:
         st.sidebar.info("Style Guide wird im Hintergrund neu geladen.")
 
-# --- Load posts ---
+# --- Posts laden ---
 params = {} if selected_status == "all" else {"status": selected_status}
 all_posts = api_get("/posts", params=params) or []
 
-# --- Status counts ---
+# --- Anzahl je Status ---
 all_for_counts = api_get("/posts") or []
 counts = {}
 for p in all_for_counts:
@@ -117,7 +117,7 @@ if not all_posts:
     st.info("No posts found. Run the pipeline to generate drafts.")
     st.stop()
 
-# --- Post cards ---
+# --- Post-Karten ---
 for post in all_posts:
     pid = post["id"]
 

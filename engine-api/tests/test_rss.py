@@ -51,7 +51,7 @@ def test_fetch_rss_feeds_handles_uneven_feed_sizes():
     with patch("rss.feedparser.parse", side_effect=_fake_parse(feed_map)):
         articles = rss.fetch_rss_feeds(feeds)
 
-    # Feed A is exhausted after round 1; feed B keeps filling subsequent rounds.
+    # Feed A ist nach Runde 1 erschöpft; Feed B füllt die folgenden Runden weiter auf.
     assert [a["topic"] for a in articles] == ["A", "B", "B", "B"]
 
 

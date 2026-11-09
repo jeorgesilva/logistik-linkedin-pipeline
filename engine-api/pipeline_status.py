@@ -1,14 +1,14 @@
-"""In-memory status of the currently running (or last) pipeline batch.
+"""Status des aktuell laufenden (oder letzten) Pipeline-Batches im Arbeitsspeicher.
 
-Single-process, single-worker deployment (see docker-compose.yml) — a
-module-level dict guarded by a lock is enough, no need for Redis/DB. Read by
-GET /pipeline/status so the dashboard can poll and show live progress instead
-of a toast that disappears with no further feedback (see cloudflare-dashboard).
+Deployment mit einem Prozess und einem Worker (siehe docker-compose.yml) — ein durch einen
+Lock geschütztes Dict auf Modulebene reicht, Redis/DB sind nicht nötig. Wird von
+GET /pipeline/status gelesen, damit das Dashboard den Fortschritt live abfragen und anzeigen
+kann, statt eines Toasts, der ohne weiteres Feedback verschwindet (siehe cloudflare-dashboard).
 
-`articles_target` is the goal of *posts created*, not a cap on how many raw
-candidates get looked at — pipeline.py keeps scanning the deduped RSS pool,
-testing article after article through the full funnel, until it has created
-that many posts or the pool runs out.
+`articles_target` ist das Ziel an *erstellten Posts*, keine Obergrenze dafür, wie viele
+Rohkandidaten angesehen werden — pipeline.py durchsucht den deduplizierten RSS-Pool weiter
+und schickt Artikel für Artikel durch den ganzen Trichter, bis so viele Posts erstellt sind
+oder der Pool erschöpft ist.
 """
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ _status: dict = {
 
 
 def start_run() -> bool:
-    """Marks a run as started. Returns False if one is already in progress."""
+    """Markiert einen Lauf als gestartet. Gibt False zurück, wenn bereits einer läuft."""
     with _lock:
         if _status["running"]:
             return False

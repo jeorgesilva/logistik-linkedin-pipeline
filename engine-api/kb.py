@@ -106,11 +106,11 @@ def retrieve_for_article(
     n_guidelines: int = 2,
     n_rejected: int = 2,
 ) -> dict:
-    """Return {examples: [...], guidelines: [...], rejected: [...]} for injection into the LLM prompt.
+    """Gibt {examples: [...], guidelines: [...], rejected: [...]} zum Einfügen in den LLM-Prompt zurück.
 
-    Returns empty lists if KB has fewer than KB_MIN_EXAMPLES approved posts (or fewer than
-    KB_MIN_REJECTED rejected posts, for the `rejected` list specifically), or if Ollama / ChromaDB
-    is unavailable — pipeline continues unaffected.
+    Gibt leere Listen zurück, wenn die KB weniger als KB_MIN_EXAMPLES freigegebene Posts enthält
+    (bzw. für die Liste `rejected` weniger als KB_MIN_REJECTED abgelehnte Posts) oder wenn Ollama /
+    ChromaDB nicht verfügbar ist — die Pipeline läuft unbeeinträchtigt weiter.
     """
     try:
         ex_col, gu_col, rej_col = _get_collections()
@@ -200,7 +200,7 @@ def get_stats() -> dict:
 
 
 def ingest_style_guide(path: str = STYLE_GUIDE_PATH) -> dict:
-    """Chunk all .md files in path by ## sections and upsert into style_guidelines."""
+    """Zerlegt alle .md-Dateien im Pfad nach ##-Abschnitten und schreibt sie per Upsert in style_guidelines."""
     guide_path = Path(path)
     if not guide_path.exists():
         logger.warning("Style guide path not found: %s", path)

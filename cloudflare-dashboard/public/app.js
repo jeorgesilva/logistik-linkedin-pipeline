@@ -1,15 +1,15 @@
 /**
- * Logistik Pipeline — dashboard (static, no build step).
- * Talks directly to engine-api's REST API from the browser. Requires
- * CORS_ALLOWED_ORIGINS on engine-api to include this page's origin.
+ * Logistik Pipeline — Dashboard (statisch, ohne Build-Schritt).
+ * Spricht im Browser direkt mit der REST-API der engine-api. Erfordert, dass
+ * CORS_ALLOWED_ORIGINS der engine-api den Origin dieser Seite enthält.
  */
 
 const STORAGE_KEY = "logistik_api_base_url";
-// engine-api runs behind a free Cloudflare Quick Tunnel whose URL changes on
-// every restart. This Worker (already used for the "Posts generieren" queue) also
-// stores the current one in KV — tunnel_reporter.py (engine-api) keeps it
-// updated. Auto-discovering it here means the link people are given for this
-// dashboard never needs to change, even though the real API URL behind it does.
+// Die engine-api läuft hinter einem kostenlosen Cloudflare Quick Tunnel, dessen URL sich bei
+// jedem Neustart ändert. Dieser Worker (bereits für die Warteschlange „Posts generieren“
+// genutzt) speichert die aktuelle URL zusätzlich in KV — tunnel_reporter.py (engine-api) hält
+// sie aktuell. Durch die automatische Ermittlung hier muss sich der Link zu diesem Dashboard
+// nie ändern, auch wenn sich die echte API-URL dahinter ändert.
 const QUEUE_WORKER_URL = "https://logistik-queue.jeorgecassil.workers.dev";
 const STATUS_FILTERS = [
   { key: "all", label: "Alle" },
@@ -31,7 +31,7 @@ let state = {
 let refreshTimer = null;
 let pipelineStatusTimer = null;
 
-// ---------- API base URL (stored per-browser in localStorage) ----------
+// ---------- API-Basis-URL (pro Browser in localStorage gespeichert) ----------
 
 function getApiBase() {
   return (localStorage.getItem(STORAGE_KEY) || "").replace(/\/+$/, "");
@@ -41,9 +41,9 @@ function setApiBase(url) {
   localStorage.setItem(STORAGE_KEY, url.replace(/\/+$/, ""));
 }
 
-// Best-effort auto-discovery of the current engine-api URL — falls back to
-// whatever's already in localStorage (or the manual setup screen) if the
-// Worker is unreachable or hasn't heard from tunnel_reporter.py yet.
+// Automatische Ermittlung der aktuellen engine-api-URL nach bestem Bemühen — fällt auf den
+// Wert in localStorage (oder den manuellen Einrichtungsbildschirm) zurück, wenn der Worker
+// nicht erreichbar ist oder noch nichts von tunnel_reporter.py gehört hat.
 async function discoverApiBase() {
   try {
     const res = await fetch(`${QUEUE_WORKER_URL}/api/tunnel-url`);
@@ -55,7 +55,7 @@ async function discoverApiBase() {
   }
 }
 
-// ---------- Fetch helpers ----------
+// ---------- Fetch-Hilfsfunktionen ----------
 
 async function apiRequest(method, path, body) {
   const base = getApiBase();
@@ -104,7 +104,7 @@ function toast(message, type = "info") {
   toastTimer = setTimeout(() => el.classList.add("hidden"), 4000);
 }
 
-// ---------- Setup screen ----------
+// ---------- Einrichtungsbildschirm ----------
 
 function initSetupScreen() {
   const input = document.getElementById("setup-api-url");
@@ -132,7 +132,7 @@ function showMainScreen() {
   document.getElementById("main-screen").classList.remove("hidden");
 }
 
-// ---------- Status nav (sidebar filters) ----------
+// ---------- Status-Navigation (Filter in der Seitenleiste) ----------
 
 function renderStatusNav() {
   const nav = document.getElementById("status-nav");
@@ -153,7 +153,7 @@ function renderStatusNav() {
   }
 }
 
-// ---------- Posts: load + render grid ----------
+// ---------- Posts: laden + Raster rendern ----------
 
 async function loadCounts() {
   try {
@@ -163,7 +163,7 @@ async function loadCounts() {
     state.counts = counts;
     renderStatusNav();
   } catch (e) {
-    // Connection status already reflects the failure; nothing else to do here.
+    // Der Verbindungsstatus zeigt den Fehler bereits an; hier ist sonst nichts zu tun.
   }
 }
 
@@ -263,7 +263,7 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-// ---------- KB panel ----------
+// ---------- KB-Bereich ----------
 
 async function loadKbStats() {
   const el = document.getElementById("kb-indicator");
@@ -282,7 +282,7 @@ async function loadKbStats() {
   }
 }
 
-// ---------- Drawer (post detail / edit) ----------
+// ---------- Seitenpanel (Post-Details / Bearbeiten) ----------
 
 async function openDrawer(postId) {
   state.drawerPostId = postId;
@@ -399,7 +399,7 @@ function showRejectBox(postId, fromRender) {
   });
 }
 
-// ---------- Post actions ----------
+// ---------- Post-Aktionen ----------
 
 async function doSave(postId, text) {
   try {
@@ -477,7 +477,7 @@ async function doRegenerateText(postId) {
 }
 
 async function pollForTextUpdate(postId, attempt = 0) {
-  if (attempt > 20 || state.drawerPostId !== postId) return; // ~2min max, or drawer closed/changed
+  if (attempt > 20 || state.drawerPostId !== postId) return; // max. ~2 Min., oder Seitenpanel geschlossen/gewechselt
   await new Promise((r) => setTimeout(r, 6000));
   if (state.drawerPostId !== postId) return;
   try {
@@ -493,7 +493,7 @@ async function pollForTextUpdate(postId, attempt = 0) {
   pollForTextUpdate(postId, attempt + 1);
 }
 
-// ---------- Sidebar actions ----------
+// ---------- Aktionen der Seitenleiste ----------
 
 async function doRunPipeline() {
   try {
@@ -509,7 +509,7 @@ async function doRunPipeline() {
   }
 }
 
-// ---------- Pipeline progress banner ----------
+// ---------- Banner für den Pipeline-Fortschritt ----------
 
 const PIPELINE_PHASE_LABELS = {
   collecting: "Artikel werden gesammelt…",
@@ -536,7 +536,7 @@ async function pollPipelineStatusOnce() {
   try {
     status = await apiGet("/pipeline/status");
   } catch (_) {
-    return; // API unreachable — leave banner/state as-is, next tick retries
+    return; // API nicht erreichbar — Banner/Zustand unverändert lassen, der nächste Tick versucht es erneut
   }
   renderPipelineStatus(status);
   if (!status.running) {
@@ -589,7 +589,7 @@ async function doKbReload() {
   }
 }
 
-// ---------- Settings modal ----------
+// ---------- Einstellungsdialog ----------
 
 function openSettings() {
   document.getElementById("settings-api-url").value = getApiBase();
@@ -602,7 +602,7 @@ function closeSettings() {
   document.getElementById("settings-modal").classList.add("hidden");
 }
 
-// ---------- Wiring + boot ----------
+// ---------- Verdrahtung + Start ----------
 
 function wireStaticControls() {
   document.getElementById("btn-run-pipeline").addEventListener("click", doRunPipeline);

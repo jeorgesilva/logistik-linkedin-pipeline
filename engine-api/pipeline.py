@@ -26,13 +26,13 @@ MIN_TEXT_CHARS = int(os.getenv("MIN_TEXT_CHARS", "500"))
 
 
 def collect_articles(
-    keywords: list[str] | None = None,  # kept for API compat, not used in RSS mode
+    keywords: list[str] | None = None,  # aus Gründen der API-Kompatibilität beibehalten, im RSS-Modus ungenutzt
     max_articles: int | None = None,
 ) -> list[dict]:
-    """Fetch headlines from RSS feeds and return top N deduplicated articles.
+    """Ruft Überschriften aus den RSS-Feeds ab und gibt die Top-N deduplizierten Artikel zurück.
 
-    Used by the /collect debug endpoint (preview only, doesn't run the funnel).
-    run_batch uses _collect_deduped_pool() instead — see its docstring for why.
+    Wird vom Debug-Endpunkt /collect genutzt (nur Vorschau, durchläuft nicht den Trichter).
+    run_batch nutzt stattdessen _collect_deduped_pool() — warum, steht in dessen Docstring.
     """
     n = max_articles or MAX_ARTICLES
     raw = fetch_rss_feeds()
@@ -42,14 +42,13 @@ def collect_articles(
 
 
 def _collect_deduped_pool() -> list[dict]:
-    """Fetch RSS feeds and dedup the *entire* pool, uncapped.
+    """Ruft die RSS-Feeds ab und dedupliziert den *gesamten* Pool, ohne Obergrenze.
 
-    run_batch walks this pool until `target_relevant` articles have passed
-    the relevance filter (Etapa 1), instead of the old behaviour of capping
-    the candidate list to MAX_ARTICLES upfront — that meant a run could
-    select 10 candidates, watch most get discarded by Etapa 1, and finish
-    with 0 posts even though dozens of untried articles were sitting in the
-    same RSS batch.
+    run_batch geht diesen Pool durch, bis `target_relevant` Artikel den Relevanzfilter
+    (Schritt 1) passiert haben, statt wie früher die Kandidatenliste vorab auf
+    MAX_ARTICLES zu begrenzen — dadurch konnte ein Lauf 10 Kandidaten auswählen, die
+    meisten in Schritt 1 verwerfen und mit 0 Posts enden, obwohl Dutzende ungeprüfte
+    Artikel im selben RSS-Batch lagen.
     """
     raw = fetch_rss_feeds()
     deduped = dedup_and_rank(raw, top_n=len(raw))
@@ -58,9 +57,9 @@ def _collect_deduped_pool() -> list[dict]:
 
 
 def _process_from_relevance(art: dict, rel_motivo: str) -> int | None:
-    """Etapas 2-4 — assumes Etapa 1 (relevância) already passed for `art`."""
+    """Schritte 2–4 — setzt voraus, dass `art` Schritt 1 (Relevanz) bereits bestanden hat."""
     try:
-        # Full-text extraction — only for articles that passed the filter
+        # Volltext-Extraktion — nur für Artikel, die den Filter passiert haben
         extraction = extract_article(art["source_url"], art.get("rss_summary", ""))
         art.update(extraction)
         logger.info(
@@ -69,7 +68,7 @@ def _process_from_relevance(art: dict, rel_motivo: str) -> int | None:
             art.get("title", "")[:60],
         )
 
-        # Etapa 2 — Ponte narrativa (runs on full article text)
+        # Schritt 2 — erzählerische Brücke (läuft auf dem vollständigen Artikeltext)
         bridge = build_bridge(art, relevance_motivo=rel_motivo)
         if not bridge:
             logger.info(
@@ -83,7 +82,7 @@ def _process_from_relevance(art: dict, rel_motivo: str) -> int | None:
             bridge.get("risco_ou_oportunidade", "")[:80],
         )
 
-        # Etapa 3 — Geração do post
+        # Schritt 3 — Erzeugung des Posts
         post_text = generate_post(art, bridge=bridge)
         if not post_text:
             logger.info(
@@ -93,7 +92,7 @@ def _process_from_relevance(art: dict, rel_motivo: str) -> int | None:
             return None
         logger.info("=== [ETAPA 3 — POST GERADO] ===\n%s", post_text[:400])
 
-        # Etapa 4 — Verificação de tom promocional
+        # Schritt 4 — Prüfung auf werblichen Ton
         ad_check = evaluate_promotional_tone(post_text)
         if ad_check and ad_check.get("soa_como_ad"):
             logger.info(
@@ -103,7 +102,7 @@ def _process_from_relevance(art: dict, rel_motivo: str) -> int | None:
             )
             return None
 
-        # Todos os filtros passaram — persiste agora
+        # Alle Filter bestanden — jetzt speichern
         seed = make_seed(art["source_url"])
         post_id = insert_post(
             topic=art.get("topic", ""),
@@ -136,12 +135,12 @@ def _process_from_relevance(art: dict, rel_motivo: str) -> int | None:
 
 
 def _process_articles(articles: list[dict], target_posts: int) -> dict:
-    """Walk `articles` (already deduped, in feed order) testing Etapa 1 on
-    each one, and keep going — pulling the next candidate from the same
-    pool — until `target_posts` posts have actually been created. Passing
-    Etapa 1 does not by itself count towards the target: Etapas 2-4 are
-    independent quality gates that can still discard the article, and if
-    they do, the search keeps going instead of stopping short.
+    """Geht `articles` (bereits dedupliziert, in Feed-Reihenfolge) durch, prüft bei jedem
+    Schritt 1 und macht weiter — mit dem nächsten Kandidaten aus demselben Pool —, bis
+    tatsächlich `target_posts` Posts erstellt wurden. Das Bestehen von Schritt 1 zählt für
+    sich allein nicht zum Ziel: Die Schritte 2–4 sind unabhängige Qualitätsschranken, die den
+    Artikel noch verwerfen können, und wenn sie das tun, geht die Suche weiter, statt vorzeitig
+    abzubrechen.
     """
     created_ids = []
     relevant_count = 0
@@ -157,7 +156,7 @@ def _process_articles(articles: list[dict], target_posts: int) -> dict:
             logger.info("Skipping duplicate source_url: %s", art["source_url"][:70])
             continue
 
-        # Etapa 1 — Filtro de relevância (runs on RSS headline + summary — fast)
+        # Schritt 1 — Relevanzfilter (läuft auf RSS-Überschrift + Zusammenfassung — schnell)
         relevance = evaluate_relevance(art)
         rel_flag = relevance.get("relevante") if relevance else None
         rel_motivo = (relevance.get("motivo", "") if relevance else "parse failed")[:150]
@@ -244,7 +243,7 @@ def _regenerate_one(post: dict) -> dict:
 
 
 def regenerate_missing_texts() -> dict:
-    """Regenerate post_text for every post where it is empty, in parallel."""
+    """Erzeugt post_text für jeden Post, bei dem er leer ist, parallel neu."""
     posts = [p for p in list_posts() if not p.get("post_text")]
     if not posts:
         return {"regenerated": 0, "failed": 0, "ids": []}

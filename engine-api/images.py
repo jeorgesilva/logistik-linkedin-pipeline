@@ -20,7 +20,7 @@ _BACKOFF = [5, 15, 30]
 
 
 def generate_image(post_id: int, image_prompt: str, seed: int) -> str:
-    """Download image from Pollinations and save locally. Returns relative path."""
+    """Lädt das Bild von Pollinations herunter und speichert es lokal. Gibt den relativen Pfad zurück."""
     os.makedirs(IMAGE_DIR, exist_ok=True)
     encoded_prompt = quote(image_prompt)
     url = (
@@ -47,7 +47,7 @@ def generate_image(post_id: int, image_prompt: str, seed: int) -> str:
 
 
 def regenerate_image(post_id: int, image_prompt: str, current_seed: int) -> tuple[str, int]:
-    """Generate with a new seed. Returns (path, new_seed)."""
+    """Erzeugt mit einem neuen Seed. Gibt (path, new_seed) zurück."""
     new_seed = make_seed(post_id, current_seed + 1)
     path = generate_image(post_id, image_prompt, new_seed)
     return path, new_seed

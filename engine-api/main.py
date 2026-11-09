@@ -31,18 +31,18 @@ IMAGE_DIR = os.getenv("IMAGE_DIR", "/data/images")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     db.init_db()
-    # Ingest style guide on startup (idempotent — upserts existing chunks)
+    # Style Guide beim Start einlesen (idempotent — vorhandene Abschnitte werden per Upsert aktualisiert)
     style_guide_path = os.getenv("STYLE_GUIDE_PATH", "/data/style_guide")
     result = kb.ingest_style_guide(style_guide_path)
     logging.getLogger(__name__).info(
         "Style guide ingested on startup: %d chunks", result.get("ingested", 0)
     )
 
-    # Offline-friendly queue poller — no-op unless QUEUE_WORKER_URL/
-    # QUEUE_SHARED_SECRET are set (see cloudflare-worker/README.md).
+    # Poller für die Warteschlange bei ausgeschaltetem Rechner — No-op, solange
+    # QUEUE_WORKER_URL/QUEUE_SHARED_SECRET nicht gesetzt sind (siehe cloudflare-worker/README.md).
     poller_task = asyncio.create_task(poll_loop())
-    # Publishes the current Quick Tunnel URL so cloudflare-dashboard can
-    # auto-discover it — no-op if cloudflared isn't in Quick Tunnel mode.
+    # Veröffentlicht die aktuelle Quick-Tunnel-URL, damit cloudflare-dashboard sie automatisch
+    # findet — No-op, wenn cloudflared nicht im Quick-Tunnel-Modus läuft.
     tunnel_reporter_task = asyncio.create_task(report_loop())
     yield
     poller_task.cancel()
@@ -51,10 +51,10 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Logistik LinkedIn Pipeline API", lifespan=lifespan)
 
-# CORS — needed because the dashboard (cloudflare-dashboard/) is a static
-# site on a different origin than this API. Empty by default (no cross-origin
-# access) until CORS_ALLOWED_ORIGINS is set, e.g.:
-#   CORS_ALLOWED_ORIGINS=https://dashboard.yourdomain.com
+# CORS — nötig, weil das Dashboard (cloudflare-dashboard/) eine statische Seite auf einem
+# anderen Origin als diese API ist. Standardmäßig leer (kein Cross-Origin-Zugriff), bis
+# CORS_ALLOWED_ORIGINS gesetzt ist, z. B.:
+#   CORS_ALLOWED_ORIGINS=https://dashboard.yourdomain.example
 _cors_origins = [o.strip() for o in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if o.strip()]
 if _cors_origins:
     app.add_middleware(
@@ -65,13 +65,13 @@ if _cors_origins:
         allow_headers=["*"],
     )
 
-# Serve generated images over HTTP so a browser on another origin can load
-# them — the dashboard builds URLs as {API_BASE}/images/{post_id}.jpg.
+# Erzeugte Bilder per HTTP ausliefern, damit ein Browser auf einem anderen Origin sie laden
+# kann — das Dashboard baut die URLs als {API_BASE}/images/{post_id}.jpg.
 os.makedirs(IMAGE_DIR, exist_ok=True)
 app.mount("/images", StaticFiles(directory=IMAGE_DIR), name="images")
 
 
-# ---------- Models ----------
+# ---------- Modelle ----------
 
 class CollectRequest(BaseModel):
     keywords: list[str] | None = None
@@ -107,7 +107,7 @@ class RunRequest(BaseModel):
     max: int | None = None
 
 
-# ---------- Routes ----------
+# ---------- Routen ----------
 
 @app.get("/health")
 def health():
@@ -161,7 +161,7 @@ def patch_post(post_id: int, req: PostUpdate):
         db.update_post(post_id, **updates)
     updated = db.get_post(post_id)
 
-    # Auto-sync to KB when a post is approved
+    # Automatische Synchronisierung mit der KB, wenn ein Post freigegeben wird
     if req.status == "approved":
         final_text = (req.post_text or post.get("post_text", "")).strip()
         if final_text:

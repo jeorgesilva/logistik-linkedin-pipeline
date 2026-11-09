@@ -48,7 +48,7 @@ def _extract_with_crawl4ai(url: str) -> tuple[str | None, str | None]:
 
 
 def extract_article(url: str, rss_summary: str = "") -> dict:
-    """Return {full_text, top_image} for the given URL."""
+    """Gibt {full_text, top_image} für die angegebene URL zurück."""
     text, image = _extract_with_trafilatura(url)
 
     if not text or len(text.strip()) < 100:

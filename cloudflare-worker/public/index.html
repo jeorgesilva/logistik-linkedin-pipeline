@@ -80,7 +80,7 @@ async function refreshStatus() {
     const data = await res.json();
     render(data);
   } catch (e) {
-    // Worker itself unreachable (rare) — leave button usable, just don't update status.
+    // Worker selbst nicht erreichbar (selten) — Button nutzbar lassen, nur den Status nicht aktualisieren.
   }
 }
 

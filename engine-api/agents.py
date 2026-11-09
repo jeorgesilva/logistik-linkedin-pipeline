@@ -14,17 +14,17 @@ TIMEOUT = int(os.getenv("OLLAMA_REQUEST_TIMEOUT", "600"))
 POST_LANGUAGE = os.getenv("POST_LANGUAGE", "German")
 MIN_POST_WORDS = int(os.getenv("MIN_POST_WORDS", "100"))
 MAX_POST_WORDS = int(os.getenv("MAX_POST_WORDS", "180"))
-# Deliberately smaller than MIN_POST_WORDS: a target this size for just the argument
-# chunk (Etapa 3a) is realistic to guarantee via retry, unlike asking for 100+ coherent
-# words across the whole post in one shot.
+# Bewusst kleiner als MIN_POST_WORDS: ein Ziel dieser Größe nur für den Argument-Block
+# (Schritt 3a) lässt sich per Retry realistisch garantieren — anders als 100+ kohärente
+# Wörter für den ganzen Post in einem Durchgang zu verlangen.
 MIN_ARGUMENT_WORDS = int(os.getenv("MIN_ARGUMENT_WORDS", "70"))
 
-# Condensed from data/style_guide/06_point_of_view.md — embedded directly in the
-# bridge/writer prompts instead of left to RAG retrieval. RAG only surfaces 2 of 39
-# guideline chunks per call, so a foundational, always-needed asset like the belief
-# bank was showing up unreliably; posts came out as fact + generic "Frachtwerk hilft
-# dabei..." tack-on instead of an actual argued position. Keep this in sync with
-# 06_point_of_view.md if the belief bank changes.
+# Verdichtet aus data/style_guide/06_point_of_view.md — direkt in die Bridge-/Writer-
+# Prompts eingebettet statt dem RAG-Retrieval überlassen. RAG liefert pro Aufruf nur 2 von
+# 39 Guideline-Abschnitten, daher tauchte ein grundlegendes, immer benötigtes Element wie die
+# Überzeugungsbank nur unzuverlässig auf; Posts bestanden dann aus Fakt + generischem
+# „Frachtwerk hilft dabei ...“-Anhängsel statt einer echt argumentierten Position. Mit
+# 06_point_of_view.md synchron halten, wenn sich die Überzeugungsbank ändert.
 _POV_BELIEFS = """\
 1. Kommunikation ist die teuerste, unsichtbarste Kostenstelle in der Logistik — nicht Visibility-Dashboards oder Routenoptimierung.
 2. Eine KI, die nur Vorschläge macht, ist keine Automatisierung — sie ist ein weiterer Klick, keine Entlastung.
@@ -57,10 +57,11 @@ _FORBIDDEN_PHRASES_BLOCK = (
 _WRITER_THIRD_PARTY_RULE = """\
 DRITTFIRMEN: nie eine im Artikel genannte private Firma (außer Frachtwerk) für ihre Leistungen, Lösungen oder Erfolge loben oder hervorheben — immer analytisch und kritisch bleiben (Risiken, Trade-offs, Bedeutung für Wettbewerber), nie im Ton einer Erfolgsgeschichte oder Werbung."""
 
-# Etapa 3a — draft only the argument (the substantive core), before hook/pivot/closing
-# exist. Asking a model to hit a length target across a whole 6-part structured post
-# in one shot is unreliable; asking it to hit a smaller target for just this one
-# paragraph is realistic and checkable — the frame (Etapa 3b) adds words on top.
+# Schritt 3a — nur das Argument (den inhaltlichen Kern) entwerfen, bevor Hook/Pivot/Abschluss
+# existieren. Von einem Modell zu verlangen, ein Längenziel über einen ganzen 6-teiligen
+# strukturierten Post in einem Durchgang zu treffen, ist unzuverlässig; ein kleineres Ziel nur
+# für diesen einen Absatz ist realistisch und prüfbar — der Rahmen (Schritt 3b) fügt weitere
+# Wörter hinzu.
 _ARGUMENT_SYSTEM = """\
 Du bist ein erfahrener LinkedIn-Ghostwriter für Frachtwerk — KI-gestützte Dispositionsautomatisierung für Speditionen im deutschen Mittelstand.
 
@@ -85,10 +86,10 @@ TON: direkt, sachkundig, dringlich, unprätentiös. Kurze Sätze für Gewicht. K
 
 Antworte NUR als JSON: {"argument_text": "..."}."""
 
-# Etapa 3b — build hook/pivot/closing around the already-written argument. The
-# argument is handed over as fixed text and the model is told not to touch it;
-# assembly of the final post_text happens in Python (_assemble_post), not here —
-# that guarantees the validated argument reaches the final post verbatim.
+# Schritt 3b — Hook/Pivot/Abschluss um das bereits geschriebene Argument bauen. Das Argument
+# wird als fester Text übergeben, und das Modell wird angewiesen, es nicht anzufassen; der
+# finale post_text wird in Python zusammengesetzt (_assemble_post), nicht hier — so erreicht
+# das validierte Argument den finalen Post garantiert wortgleich.
 _FRAME_SYSTEM = """\
 Du bist ein erfahrener LinkedIn-Ghostwriter für Frachtwerk — KI-gestützte Dispositionsautomatisierung für Speditionen im deutschen Mittelstand.
 
@@ -110,11 +111,11 @@ FORMAT: Ich-Perspektive (institutionelles "wir"); kein Clickbait.
 
 Antworte NUR als JSON: {"hook": "...", "pivot": "...", "closing": "...", "hashtags": ["#...", "..."]}."""
 
-# Etapa 3c — real revision pass, not a blind retry. Python already knows the exact
-# word count and has already scanned for forbidden phrases before this call — the
-# model is told those facts rather than asked to judge them itself, and its actual
-# job here is the one thing Python can't check: whether hook+pivot (written
-# separately in 3b) really connects to the argument, or feels bolted on.
+# Schritt 3c — echter Überarbeitungsdurchgang, kein blinder Retry. Python kennt vor diesem
+# Aufruf bereits die exakte Wortzahl und hat nach verbotenen Phrasen gesucht — dem Modell
+# werden diese Fakten mitgeteilt, statt es selbst urteilen zu lassen; seine eigentliche
+# Aufgabe ist das Einzige, was Python nicht prüfen kann: ob Hook+Pivot (separat in 3b
+# geschrieben) wirklich zum Argument führen oder angeklebt wirken.
 _REVISE_SYSTEM = """\
 Du bist Redakteur/Lektor für Frachtwerk-LinkedIn-Posts. Du bekommst einen fertig zusammengesetzten Post und prüfst ihn kritisch, bevor er freigegeben wird — wie ein Autor, der seinen Text am Ende noch einmal ganz liest, bevor er ihn abgibt.
 
@@ -168,12 +169,12 @@ illustratives Beispiel eines größeren Branchenmusters — nie als Protagonisti
 Speditionen machen Y" oder "die Branche bewegt sich in Richtung Y" — außer der Firmenname ist \
 für die Glaubwürdigkeit des Fakts zwingend nötig."""
 
-# Etapa 2a — divergent step. One shot forced the model straight from raw text to a
-# single, structured impact claim; when unsure it took the easy way out by writing
-# the literal escape phrase the discard filter matched on ("nicht spezifisch genug"
-# used to be instructed here). Generating 3 angles first, uncommitted, before any
-# quality judgment happens, mirrors brainstorming/freewriting: several rough premises
-# on paper before deciding which one is worth arguing.
+# Schritt 2a — divergenter Schritt. Ein einziger Durchgang zwang das Modell direkt vom Rohtext
+# zu einer einzigen, strukturierten Wirkungsaussage; im Zweifel nahm es den bequemen Ausweg und
+# schrieb wörtlich die Ausweichphrase, auf die der Verwerfungsfilter reagierte („nicht spezifisch
+# genug“ wurde hier früher vorgegeben). Zuerst 3 Blickwinkel unverbindlich zu erzeugen, bevor
+# irgendeine Qualitätsbewertung stattfindet, entspricht Brainstorming/Freewriting: mehrere grobe
+# Prämissen auf Papier, bevor man entscheidet, welche es wert ist, argumentiert zu werden.
 _BRAINSTORM_SYSTEM = """\
 Du bist Analytiker für deutsche Speditionen und denkst im Sinne der Frachtwerk-Positionierung.
 
@@ -208,10 +209,10 @@ Fülle dieses JSON aus, mit genau 3 Objekten in "angulos", jedes mit dieser Stru
 
 Antworte NUR als JSON: {"angulos": [ANSATZ_1, ANSATZ_2, ANSATZ_3]} — Liste mit genau 3 Objekten."""
 
-# Etapa 2b — convergent step. A contrastive judgment between 3 concrete alternatives
-# is a more reliable quality gate than a model rating its own single output; this
-# replaces the old substring-matching discard filter as the primary gate (that filter
-# is kept downstream only as a cheap secondary safety net).
+# Schritt 2b — konvergenter Schritt. Ein vergleichendes Urteil zwischen 3 konkreten Alternativen
+# ist eine zuverlässigere Qualitätsschranke, als wenn ein Modell seine einzige eigene Ausgabe
+# bewertet; das ersetzt den alten Verwerfungsfilter per Substring-Abgleich als primäre Schranke
+# (dieser Filter bleibt nachgelagert nur als günstiges zweites Sicherheitsnetz erhalten).
 _BRIDGE_SELECT_SYSTEM = """\
 Du bist Redakteur für Frachtwerk und bewertest 3 vorgeschlagene argumentative Brücken zwischen \
 einem Nachrichtenereignis und der Spedition-Realität. Du bekommst den Artikel und die 3 Ansätze \
@@ -260,7 +261,7 @@ Answer ONLY as JSON: {"image_prompt": "..."}."""
 
 
 def _extract_json(text: str, key: str) -> str | None:
-    """Try to extract {key: value} from potentially messy LLM output."""
+    """Versucht, {key: value} aus möglicherweise unsauberer LLM-Ausgabe zu extrahieren."""
     try:
         data = json.loads(text)
         if key in data:
@@ -268,7 +269,7 @@ def _extract_json(text: str, key: str) -> str | None:
     except json.JSONDecodeError:
         pass
 
-    # Fallback: find JSON object in the text
+    # Fallback: JSON-Objekt im Text suchen
     match = re.search(r'\{[^{}]*"' + re.escape(key) + r'"[^{}]*\}', text, re.DOTALL)
     if match:
         try:
@@ -281,14 +282,14 @@ def _extract_json(text: str, key: str) -> str | None:
 
 
 def _parse_json_obj(text: str, required_keys: list) -> dict | None:
-    """Parse a JSON object from LLM output, validating all required keys are present."""
+    """Parst ein JSON-Objekt aus der LLM-Ausgabe und prüft, ob alle Pflichtschlüssel vorhanden sind."""
     try:
         data = json.loads(text)
         if isinstance(data, dict) and all(k in data for k in required_keys):
             return data
     except json.JSONDecodeError:
         pass
-    # Fallback: find outermost JSON object (handles markdown code blocks, preambles)
+    # Fallback: äußerstes JSON-Objekt suchen (fängt Markdown-Codeblöcke und Vorreden ab)
     match = re.search(r'\{.*\}', text, re.DOTALL)
     if match:
         try:
@@ -321,7 +322,7 @@ def _chat(model: str, system: str, user: str, temperature: float = 0.6) -> str:
 
 
 def _build_kb_context(article: dict) -> str:
-    """Retrieve relevant examples and guidelines from the KB and format them for the prompt."""
+    """Holt passende Beispiele und Guidelines aus der KB und formatiert sie für den Prompt."""
     try:
         from kb import retrieve_for_article
         query = f"{article.get('title', '')} {article.get('full_text', '')[:300]}"
@@ -351,9 +352,9 @@ def _build_kb_context(article: dict) -> str:
 
 
 def evaluate_relevance(article: dict) -> dict | None:
-    """Step 1: Check if article has concrete relevance for a Spedition.
+    """Schritt 1: Prüft, ob der Artikel konkrete Relevanz für eine Spedition hat.
 
-    Returns {"relevante": bool, "motivo": str} or None on failure.
+    Gibt {"relevante": bool, "motivo": str} zurück, bei Fehler None.
     """
     user_msg = (
         f"Schlagzeile: {article.get('title', '')}\n\n"
@@ -373,7 +374,7 @@ def evaluate_relevance(article: dict) -> dict | None:
 
 
 def evaluate_promotional_tone(post_text: str) -> dict | None:
-    """Step 4 (post-generation): flag posts that read as advertising for a third party."""
+    """Schritt 4 (nach der Erzeugung): erkennt Posts, die wie Werbung für ein Drittunternehmen klingen."""
     required = ["soa_como_ad", "motivo"]
     for attempt in range(2):
         try:
@@ -398,10 +399,11 @@ _BRIDGE_ANGLE_KEYS = [
 
 
 def _brainstorm_angles(article: dict, relevance_motivo: str = "") -> list[dict]:
-    """Etapa 2a: generate up to 3 divergent candidate bridges (brainstorm step).
+    """Schritt 2a: erzeugt bis zu 3 divergente Kandidaten-Bridges (Brainstorming-Schritt).
 
-    Returns a list of angle dicts (each shaped like the old build_bridge output),
-    or [] on failure. Deliberately not filtered for quality here — that's Etapa 2b.
+    Gibt eine Liste von Blickwinkel-Dicts zurück (jeweils im Format der alten
+    build_bridge-Ausgabe), bei Fehler []. Hier bewusst nicht nach Qualität gefiltert —
+    das übernimmt Schritt 2b.
     """
     context = f"Relevanz-Kontext: {relevance_motivo}\n\n" if relevance_motivo else ""
     user_msg = (
@@ -427,10 +429,10 @@ def _brainstorm_angles(article: dict, relevance_motivo: str = "") -> list[dict]:
 
 
 def _select_best_angle(article: dict, angles: list[dict]) -> dict | None:
-    """Etapa 2b: critically compare the candidate angles and pick/sharpen the strongest.
+    """Schritt 2b: vergleicht die Kandidaten-Blickwinkel kritisch und wählt/schärft den stärksten.
 
-    Returns the winning angle dict, {"invalid": True, ...} if none are defensible,
-    or None on parse failure.
+    Gibt das Dict des Gewinners zurück, {"invalid": True, ...}, wenn keiner vertretbar ist,
+    oder None bei einem Parse-Fehler.
     """
     angles_text = "\n\n".join(
         f"Ansatz {i}:\n{json.dumps(a, ensure_ascii=False)}"
@@ -454,15 +456,16 @@ def _select_best_angle(article: dict, angles: list[dict]) -> dict | None:
 
 
 def build_bridge(article: dict, relevance_motivo: str = "") -> dict | None:
-    """Step 2: Build narrative bridge between the news event and Spedition reality.
+    """Schritt 2: baut die erzählerische Brücke zwischen Nachricht und Speditionsalltag.
 
-    Two-stage process — brainstorm 3 candidate angles (divergent), then critically
-    select and sharpen the strongest one (convergent) — instead of committing to a
-    single angle in one shot. Contrastive judgment between alternatives is a more
-    reliable quality gate than a model rating its own single output in isolation.
+    Zweistufiger Ablauf — 3 Kandidaten-Blickwinkel brainstormen (divergent), dann den
+    stärksten kritisch auswählen und schärfen (konvergent) — statt sich in einem Durchgang
+    auf einen einzigen Blickwinkel festzulegen. Ein vergleichendes Urteil zwischen
+    Alternativen ist eine zuverlässigere Qualitätsschranke, als wenn ein Modell seine
+    einzige eigene Ausgabe isoliert bewertet.
 
-    Returns {"o_que_aconteceu", "impacto_para_spedition", "risco_ou_oportunidade",
-    "conexao_frachtwerk", ...} or None on failure.
+    Gibt {"o_que_aconteceu", "impacto_para_spedition", "risco_ou_oportunidade",
+    "conexao_frachtwerk", ...} zurück, bei Fehler None.
     """
     title = article.get("title", "")[:70]
 
@@ -525,11 +528,12 @@ def _find_forbidden_phrases(text: str) -> list[str]:
 
 
 def _draft_argument(article: dict, bridge: dict | None, kb_context: str) -> str:
-    """Etapa 3a: draft only the argument paragraph — the substantive core.
+    """Schritt 3a: entwirft nur den Argument-Absatz — den inhaltlichen Kern.
 
-    A short first attempt gets a *targeted* retry (previous draft + its actual
-    word count fed back to the model) instead of blindly resending the same
-    prompt — a blind retry has no reason to converge upward and can regress.
+    Ein zu kurzer erster Versuch bekommt einen *gezielten* Retry (vorheriger Entwurf +
+    seine tatsächliche Wortzahl werden an das Modell zurückgegeben), statt denselben
+    Prompt blind erneut zu senden — ein blinder Retry hat keinen Grund, sich nach oben
+    anzunähern, und kann sich sogar verschlechtern.
     """
     base_user_msg = (
         f"{kb_context}"
@@ -538,10 +542,10 @@ def _draft_argument(article: dict, bridge: dict | None, kb_context: str) -> str:
         f"Artikeltext:\n{article.get('full_text', '')[:3000]}"
     )
     user_msg = base_user_msg
-    # 3, not 2: the targeted retry (below) tends to climb toward the target in
-    # visible increments once the model has real feedback to react to, but one
-    # retry isn't always enough — observed live runs climbing 45->62 and 39->60
-    # words in a single retry, one attempt short of MIN_ARGUMENT_WORDS.
+    # 3, nicht 2: der gezielte Retry (unten) nähert sich dem Ziel in sichtbaren Schritten,
+    # sobald das Modell echtes Feedback bekommt, aber ein Retry reicht nicht immer — in
+    # echten Läufen stieg die Wortzahl in einem Retry von 45->62 und 39->60, also genau
+    # einen Versuch unter MIN_ARGUMENT_WORDS.
     for attempt in range(3):
         try:
             raw = _chat(WRITER_MODEL, _ARGUMENT_SYSTEM, user_msg)
@@ -574,7 +578,7 @@ def _draft_argument(article: dict, bridge: dict | None, kb_context: str) -> str:
 
 
 def _frame_post(article: dict, bridge: dict | None, argument_text: str, kb_context: str) -> dict | None:
-    """Etapa 3b: build hook/pivot/closing/hashtags around the finished argument."""
+    """Schritt 3b: baut Hook/Pivot/Abschluss/Hashtags um das fertige Argument."""
     user_msg = (
         f"{kb_context}"
         f"{_format_bridge_context(bridge)}"
@@ -608,13 +612,13 @@ def _assemble_post(frame: dict, argument_text: str) -> str:
 
 
 def _revise_post(article: dict, post_text: str) -> dict | None:
-    """Etapa 3c: real revision pass — coherence, length, forbidden phrases.
+    """Schritt 3c: echter Überarbeitungsdurchgang — Kohärenz, Länge, verbotene Phrasen.
 
-    Python computes word count and scans for forbidden phrases beforehand and
-    hands both to the model as facts, rather than asking it to judge them itself.
-    Also verifies its own fix: if a forbidden phrase is still present after a
-    revision, that's fed back on a second attempt instead of trusting compliance
-    blindly — a model asked to remove a phrase isn't guaranteed to actually do it.
+    Python berechnet vorab die Wortzahl, sucht nach verbotenen Phrasen und übergibt beides
+    dem Modell als Fakten, statt es selbst urteilen zu lassen. Prüft außerdem die eigene
+    Korrektur: Ist nach einer Überarbeitung noch eine verbotene Phrase vorhanden, wird das
+    in einem zweiten Versuch zurückgemeldet, statt der Befolgung blind zu vertrauen — ein
+    Modell, das eine Phrase entfernen soll, tut das nicht garantiert.
     """
     current_text = post_text
     last_result: dict | None = None
@@ -651,13 +655,13 @@ def _revise_post(article: dict, post_text: str) -> dict | None:
 
 
 def generate_post(article: dict, bridge: dict | None = None) -> str:
-    """Agent 1: produce a German LinkedIn post for the article.
+    """Agent 1: erzeugt einen deutschen LinkedIn-Post zum Artikel.
 
-    Three-stage process mirroring how a human drafts an argumentative text: draft
-    the argument first (Etapa 3a, the substantive core), build hook/pivot/closing
-    around the finished argument (Etapa 3b), then a real revision pass checks
-    coherence, length and forbidden phrases before returning (Etapa 3c) — instead
-    of generating the whole structured post in one shot with a blind length retry.
+    Dreistufiger Ablauf, wie ein Mensch einen argumentativen Text entwirft: zuerst das
+    Argument (Schritt 3a, der inhaltliche Kern), dann Hook/Pivot/Abschluss um das fertige
+    Argument (Schritt 3b), schließlich prüft ein echter Überarbeitungsdurchgang Kohärenz,
+    Länge und verbotene Phrasen vor der Rückgabe (Schritt 3c) — statt den ganzen
+    strukturierten Post in einem Durchgang mit blindem Längen-Retry zu erzeugen.
     """
     title = article.get("title", "")[:60]
     kb_context = _build_kb_context(article)
@@ -693,7 +697,7 @@ def generate_post(article: dict, bridge: dict | None = None) -> str:
 
 
 def generate_image_prompt(article: dict, post_text: str) -> str:
-    """Agent 2: produce an English text-to-image prompt."""
+    """Agent 2: erzeugt einen englischen Text-to-Image-Prompt."""
     user_msg = (
         f"Topic: {article.get('topic', '')}\n"
         f"Article title: {article.get('title', '')}\n\n"
