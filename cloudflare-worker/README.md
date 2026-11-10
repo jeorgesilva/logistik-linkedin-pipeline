@@ -1,90 +1,89 @@
-# Fila assíncrona — deploy do Cloudflare Worker
+# Asynchrone Warteschlange — Deployment des Cloudflare Workers
 
-Este Worker é a "recepção" sempre online: recebe o clique de "Gerar Posts" do
-seu colega mesmo com seu computador desligado, guarda o pedido, e o
-`engine-api` (rodando no seu computador) busca esse pedido periodicamente
-quando está online.
+Dieser Worker ist die immer erreichbare „Rezeption“: Er nimmt den Klick auf „Posts generieren“
+eines Teammitglieds auch dann entgegen, wenn dein Rechner ausgeschaltet ist, speichert die
+Anfrage, und die `engine-api` (die auf deinem Rechner läuft) fragt diese Anfrage regelmäßig ab,
+sobald sie online ist.
 
-Passos abaixo precisam da sua conta Cloudflare — não podem ser feitos por
-mim, só documentados aqui.
+Die folgenden Schritte erfordern dein Cloudflare-Konto — sie lassen sich nicht automatisieren und
+sind hier nur dokumentiert.
 
-## 1. Pré-requisitos
+## 1. Voraussetzungen
 
 ```bash
 npm install -g wrangler
 wrangler login
 ```
 
-## 2. Criar o namespace KV
+## 2. KV-Namespace anlegen
 
 ```bash
 cd cloudflare-worker
 wrangler kv namespace create QUEUE_KV
 ```
 
-Isso imprime um `id`. Copie e cole em `wrangler.toml`, substituindo
-`REPLACE_WITH_YOUR_KV_NAMESPACE_ID`.
+Der Befehl gibt eine `id` aus. Diese kopieren und in `wrangler.toml` anstelle von
+`REPLACE_WITH_YOUR_KV_NAMESPACE_ID` einsetzen.
 
-## 3. Gerar e configurar o segredo compartilhado
+## 3. Gemeinsames Geheimnis erzeugen und konfigurieren
 
-Esse segredo autentica a comunicação `engine-api` ↔ Worker nas rotas
-`/api/pending` e `/api/complete` (a rota `/api/request`, que o colega usa, é
-pública de propósito — mesmo nível de confiança que o `/run` do engine-api
-hoje).
+Dieses Geheimnis authentifiziert die Kommunikation `engine-api` ↔ Worker auf den Routen
+`/api/pending` und `/api/complete` (die Route `/api/request`, die das Teammitglied nutzt, ist
+absichtlich öffentlich — dieselbe Vertrauensstufe wie `/run` der engine-api heute).
 
 ```bash
 openssl rand -hex 32
-# copie o valor gerado
+# den erzeugten Wert kopieren
 wrangler secret put QUEUE_SHARED_SECRET
-# cole o mesmo valor quando pedido
+# bei der Abfrage denselben Wert einfügen
 ```
 
-Guarde esse mesmo valor para colocar em `QUEUE_SHARED_SECRET` no `.env` do
-`engine-api` (fora do git).
+Denselben Wert aufbewahren, um ihn als `QUEUE_SHARED_SECRET` in die `.env` der `engine-api`
+einzutragen (außerhalb von Git).
 
-## 4. Deploy
+## 4. Deployen
 
 ```bash
 wrangler deploy
 ```
 
-O comando imprime a URL pública (algo como
-`https://logistik-queue.SEU-SUBDOMINIO.workers.dev`).
+Der Befehl gibt die öffentliche URL aus (etwa
+`https://logistik-queue.DEINE-SUBDOMAIN.workers.dev`).
 
-## 5. (Opcional) Domínio próprio
+## 5. (Optional) Eigene Domain
 
-No painel Cloudflare → Workers & Pages → `logistik-queue` → Settings →
-Domains & Routes → Add Custom Domain (ex.: `gerar.logaid.ai`). Fica mais
-apresentável para mandar ao colega do que a URL `.workers.dev`.
+Im Cloudflare-Dashboard → Workers & Pages → `logistik-queue` → Settings →
+Domains & Routes → Add Custom Domain (z. B. `posts.frachtwerk.example`). Das wirkt beim Weitergeben an
+das Teammitglied professioneller als die `.workers.dev`-URL.
 
-## 6. Configurar o `engine-api`
+## 6. `engine-api` konfigurieren
 
-No `.env` do projeto (não versionado):
+In der `.env` des Projekts (nicht versioniert):
 
 ```
-QUEUE_WORKER_URL=https://gerar.logaid.ai        # ou a URL .workers.dev
-QUEUE_SHARED_SECRET=<o mesmo valor do passo 3>
+QUEUE_WORKER_URL=https://posts.frachtwerk.example        # oder die .workers.dev-URL
+QUEUE_SHARED_SECRET=<derselbe Wert wie in Schritt 3>
 QUEUE_POLL_INTERVAL_SECONDS=60
 ```
 
-Depois: `docker compose build engine-api && docker compose up -d engine-api`.
+Danach: `docker compose build engine-api && docker compose up -d engine-api`.
 
-## 7. Testar
+## 7. Testen
 
-1. Com o `engine-api` **desligado**, abra a URL do Worker e clique em
-   "🚀 Gerar Posts" — deve mostrar "⏳ Pedido registrado...".
-2. Suba o `engine-api` (`docker compose up -d`). Dentro de
-   `QUEUE_POLL_INTERVAL_SECONDS` (60s por padrão), os logs
-   (`docker compose logs -f engine-api`) devem mostrar
-   `Queue: pending request found ... running pipeline`.
-3. Quando terminar, recarregue a página do Worker — deve mostrar
-   "✅ Pronto! N posts criados."
+1. Bei **ausgeschalteter** `engine-api` die Worker-URL öffnen und auf „🚀 Posts generieren“
+   klicken — es sollte „⏳ Anfrage registriert am …“ erscheinen.
+2. Die `engine-api` starten (`docker compose up -d`). Innerhalb von
+   `QUEUE_POLL_INTERVAL_SECONDS` (standardmäßig 60 s) sollten die Logs
+   (`docker compose logs -f engine-api`) die Meldung
+   `Queue: offene Anfrage gefunden ... Pipeline wird gestartet` zeigen.
+3. Nach Abschluss die Worker-Seite neu laden — sie sollte „✅ Fertig! N Posts erstellt.“
+   anzeigen.
 
-## Sobre segurança
+## Zur Sicherheit
 
-`/api/request` é público (qualquer um com o link pode clicar). Isso é
-intencional e consistente com o `/run` do `engine-api`, que também não tem
-autenticação hoje. Se quiser restringir quem pode acionar o botão, a forma
-mais simples é colocar **Cloudflare Access** na frente da rota deste Worker
-(mesma ideia já usada nos hostnames do Cloudflare Tunnel) — assim só quem
-fizer login (e-mail/OTP) vê a página e consegue clicar.
+`/api/request` ist öffentlich (jeder mit dem Link kann klicken). Das ist beabsichtigt und
+konsistent mit `/run` der `engine-api`, das derzeit ebenfalls keine Authentifizierung hat. Wenn du
+einschränken möchtest, wer den Button auslösen kann, ist der einfachste Weg, **Cloudflare Access**
+vor die Route dieses Workers zu schalten (dieselbe Idee wie bereits bei den Hostnamen des
+Cloudflare Tunnels) — dann sehen nur Personen, die sich anmelden (E-Mail/OTP), die Seite und
+können klicken.

@@ -14,17 +14,17 @@ from agents import (
 
 
 def test_evaluate_promotional_tone_flags_ad_like_post():
-    raw = json.dumps({"soa_como_ad": True, "motivo": "Lobt Firma X überschwänglich"})
+    raw = json.dumps({"sounds_like_ad": True, "reason": "Lobt Firma X überschwänglich"})
     with patch("agents._chat", return_value=raw):
         result = evaluate_promotional_tone("Firma X hat eine revolutionäre Lösung...")
-    assert result == {"soa_como_ad": True, "motivo": "Lobt Firma X überschwänglich"}
+    assert result == {"sounds_like_ad": True, "reason": "Lobt Firma X überschwänglich"}
 
 
 def test_evaluate_promotional_tone_passes_independent_analysis():
-    raw = json.dumps({"soa_como_ad": False, "motivo": "Kritische, unabhängige Einordnung"})
+    raw = json.dumps({"sounds_like_ad": False, "reason": "Kritische, unabhängige Einordnung"})
     with patch("agents._chat", return_value=raw):
         result = evaluate_promotional_tone("Die Branche steht vor einem Kapazitätsproblem...")
-    assert result["soa_como_ad"] is False
+    assert result["sounds_like_ad"] is False
 
 
 def test_evaluate_promotional_tone_returns_none_after_failed_parses():
@@ -34,10 +34,10 @@ def test_evaluate_promotional_tone_returns_none_after_failed_parses():
 
 
 def test_evaluate_relevance_parses_valid_response():
-    raw = json.dumps({"relevante": True, "motivo": "Direkter Frachtraten-Effekt"})
+    raw = json.dumps({"relevant": True, "reason": "Direkter Frachtraten-Effekt"})
     with patch("agents._chat", return_value=raw):
         result = evaluate_relevance({"title": "Hafenblockade", "full_text": "..."})
-    assert result["relevante"] is True
+    assert result["relevant"] is True
 
 
 def test_evaluate_relevance_returns_none_after_failed_parses():
@@ -48,13 +48,13 @@ def test_evaluate_relevance_returns_none_after_failed_parses():
 
 def _angle(impact="x", risk="y"):
     return {
-        "o_que_aconteceu": "x",
-        "questao_contestada": "x",
-        "crenca_aplicada": "",
-        "impacto_para_spedition": impact,
-        "risco_ou_oportunidade": risk,
-        "conexao_logaid": "",
-        "empresa_mencionada": "",
+        "what_happened": "x",
+        "contested_question": "x",
+        "applied_belief": "",
+        "impact_for_forwarders": impact,
+        "risk_or_opportunity": risk,
+        "frachtwerk_connection": "",
+        "mentioned_company": "",
     }
 
 
@@ -63,7 +63,7 @@ def test_build_bridge_returns_data_for_concrete_impact():
     select_raw = json.dumps(_angle(impact="Neue Meldepflichten ab Q3", risk="Bußgeldrisiko bei Verstoß"))
     with patch("agents._chat", side_effect=[brainstorm_raw, select_raw]):
         result = build_bridge({"title": "x", "full_text": "y"})
-    assert result["impacto_para_spedition"] == "Neue Meldepflichten ab Q3"
+    assert result["impact_for_forwarders"] == "Neue Meldepflichten ab Q3"
 
 
 def test_build_bridge_discards_generic_impact():
@@ -76,7 +76,7 @@ def test_build_bridge_discards_generic_impact():
 
 def test_build_bridge_discards_when_selection_finds_no_defensible_angle():
     brainstorm_raw = json.dumps({"angulos": [_angle(), _angle(), _angle()]})
-    select_raw = json.dumps({"invalid": True, "motivo": "Kein operativer Hebel für eine Spedition"})
+    select_raw = json.dumps({"invalid": True, "reason": "Kein operativer Hebel für eine Spedition"})
     with patch("agents._chat", side_effect=[brainstorm_raw, select_raw]):
         result = build_bridge({"title": "x", "full_text": "y"})
     assert result is None
@@ -105,7 +105,7 @@ def test_generate_post_happy_path_assembles_and_returns_revised_text():
     draft_raw = json.dumps({"argument_text": _dummy_argument(80)})
     frame_raw = _frame_response()
     revised_text = _dummy_argument(110)
-    revise_raw = json.dumps({"post_text": revised_text, "changed": True, "motivo": "Argument leicht erweitert"})
+    revise_raw = json.dumps({"post_text": revised_text, "changed": True, "reason": "Argument leicht erweitert"})
     with patch("agents._chat", side_effect=[draft_raw, frame_raw, revise_raw]):
         result = generate_post({"title": "x", "full_text": "y"}, bridge=None)
     assert result == revised_text
@@ -114,10 +114,10 @@ def test_generate_post_happy_path_assembles_and_returns_revised_text():
 def test_generate_post_retries_revision_when_forbidden_phrase_survives():
     draft_raw = json.dumps({"argument_text": _dummy_argument(80)})
     frame_raw = _frame_response()
-    dirty_text = _dummy_argument(110) + " LogAid hilft dabei."
+    dirty_text = _dummy_argument(110) + " Frachtwerk hilft dabei."
     clean_text = _dummy_argument(112)
-    revise_dirty = json.dumps({"post_text": dirty_text, "changed": True, "motivo": "erweitert"})
-    revise_clean = json.dumps({"post_text": clean_text, "changed": True, "motivo": "Phrase entfernt"})
+    revise_dirty = json.dumps({"post_text": dirty_text, "changed": True, "reason": "erweitert"})
+    revise_clean = json.dumps({"post_text": clean_text, "changed": True, "reason": "Phrase entfernt"})
     with patch("agents._chat", side_effect=[draft_raw, frame_raw, revise_dirty, revise_clean]):
         result = generate_post({"title": "x", "full_text": "y"})
     assert result == clean_text
@@ -149,8 +149,8 @@ def test_generate_post_falls_back_to_unrevised_draft_when_revision_fails():
 def test_generate_post_discards_if_still_short_after_revision():
     draft_raw = json.dumps({"argument_text": _dummy_argument(70)})
     frame_raw = _frame_response()
-    short_revised = "Kurz. " * 20  # 20 words, well under MIN_POST_WORDS
-    revise_raw = json.dumps({"post_text": short_revised, "changed": False, "motivo": ""})
+    short_revised = "Kurz. " * 20  # 20 Wörter, deutlich unter MIN_POST_WORDS
+    revise_raw = json.dumps({"post_text": short_revised, "changed": False, "reason": ""})
     with patch("agents._chat", side_effect=[draft_raw, frame_raw, revise_raw]):
         result = generate_post({"title": "x", "full_text": "y"})
     assert result == ""

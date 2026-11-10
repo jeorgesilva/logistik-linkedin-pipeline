@@ -1,10 +1,10 @@
 name = "logistik-dashboard"
 compatibility_date = "2026-07-16"
 
-# Pure static site — no server-side logic, no KV, no secrets. Everything the
-# dashboard needs comes from calling the engine-api directly in the browser
-# (see public/app.js, API_BASE_URL). Kept as a Workers static-assets project
-# (rather than Cloudflare Pages) for consistency with cloudflare-worker/ and
-# because Cloudflare is steering new static-site deploys towards Workers.
+# Rein statische Seite — keine serverseitige Logik, kein KV, keine Secrets. Alles, was das
+# Dashboard braucht, kommt aus direkten Aufrufen der engine-api im Browser
+# (siehe public/app.js, API_BASE_URL). Als Workers-Static-Assets-Projekt angelegt
+# (statt Cloudflare Pages), aus Konsistenz mit cloudflare-worker/ und weil Cloudflare
+# neue statische Deployments in Richtung Workers lenkt.
 [assets]
 directory = "./public/"

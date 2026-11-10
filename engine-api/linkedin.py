@@ -1,17 +1,17 @@
 """
-Phase 2 — LinkedIn publishing stub.
-Gated behind LINKEDIN_ENABLED=true. Disabled by default.
+Phase 2 — Grundgerüst für die Veröffentlichung auf LinkedIn.
+Nur aktiv mit LINKEDIN_ENABLED=true. Standardmäßig deaktiviert.
 
-To enable:
-1. Create a LinkedIn developer app with w_member_social scope.
-2. Obtain an OAuth 2.0 access token (expires ~60 days; set LINKEDIN_ACCESS_TOKEN).
-3. Find your author URN: urn:li:person:<id> (set LINKEDIN_AUTHOR_URN).
-4. Set LINKEDIN_ENABLED=true in .env.
-5. Call publish_approved_drafts() from a scheduled task or n8n.
+Aktivieren:
+1. Eine LinkedIn-Developer-App mit dem Scope w_member_social anlegen.
+2. Ein OAuth-2.0-Access-Token besorgen (läuft nach ~60 Tagen ab; LINKEDIN_ACCESS_TOKEN setzen).
+3. Die eigene Author-URN ermitteln: urn:li:person:<id> (LINKEDIN_AUTHOR_URN setzen).
+4. LINKEDIN_ENABLED=true in .env setzen.
+5. publish_approved_drafts() aus einem geplanten Task oder aus n8n aufrufen.
 
-Rate limits: ~10–100 posts/day for personal tokens.
-Recommendation: use lifecycleState="DRAFT" and publish manually from LinkedIn
-to stay within ToS safe posture.
+Rate-Limits: ~10–100 Posts/Tag bei persönlichen Tokens.
+Empfehlung: lifecycleState="DRAFT" verwenden und manuell in LinkedIn veröffentlichen,
+um im Hinblick auf die Nutzungsbedingungen auf der sicheren Seite zu bleiben.
 """
 
 import logging
@@ -36,7 +36,7 @@ _HEADERS_BASE = {
 
 
 def _upload_image(image_path: str) -> str:
-    """Register + upload image, return LinkedIn image URN."""
+    """Bild registrieren + hochladen, gibt die LinkedIn-Bild-URN zurück."""
     init_resp = requests.post(
         f"{_BASE}/images?action=initializeUpload",
         headers=_HEADERS_BASE,
@@ -56,7 +56,7 @@ def _upload_image(image_path: str) -> str:
 
 
 def _create_draft_post(post_text: str, image_urn: str) -> str:
-    """Create a LinkedIn DRAFT post; return post URN."""
+    """Legt einen LinkedIn-Post als ENTWURF (DRAFT) an; gibt die Post-URN zurück."""
     body = {
         "author": AUTHOR_URN,
         "commentary": post_text,
@@ -87,19 +87,19 @@ def _create_draft_post(post_text: str, image_urn: str) -> str:
 
 
 def publish_approved_drafts():
-    """Push approved posts to LinkedIn as drafts. No-op if LINKEDIN_ENABLED=false."""
+    """Überträgt freigegebene Posts als Entwürfe an LinkedIn. No-op bei LINKEDIN_ENABLED=false."""
     if not LINKEDIN_ENABLED:
-        logger.info("LinkedIn publishing disabled (LINKEDIN_ENABLED=false). Skipping.")
+        logger.info("LinkedIn-Veröffentlichung deaktiviert (LINKEDIN_ENABLED=false). Wird übersprungen.")
         return
 
     if not ACCESS_TOKEN or not AUTHOR_URN:
-        logger.error("LINKEDIN_ACCESS_TOKEN or LINKEDIN_AUTHOR_URN not configured.")
+        logger.error("LINKEDIN_ACCESS_TOKEN oder LINKEDIN_AUTHOR_URN nicht konfiguriert.")
         return
 
     from db import list_posts, update_post
 
     approved = [p for p in list_posts(status="approved")]
-    logger.info("Publishing %d approved posts to LinkedIn", len(approved))
+    logger.info("Veröffentliche %d genehmigte Posts auf LinkedIn", len(approved))
 
     for post in approved:
         try:
@@ -109,6 +109,6 @@ def publish_approved_drafts():
 
             linkedin_urn = _create_draft_post(post["post_text"], image_urn)
             update_post(post["id"], status="posted", linkedin_urn=linkedin_urn)
-            logger.info("Posted %d → LinkedIn URN: %s", post["id"], linkedin_urn)
+            logger.info("Post %d veröffentlicht → LinkedIn-URN: %s", post["id"], linkedin_urn)
         except Exception as e:
-            logger.error("Failed to publish post %d: %s", post["id"], e)
+            logger.error("Veröffentlichung von Post %d fehlgeschlagen: %s", post["id"], e)

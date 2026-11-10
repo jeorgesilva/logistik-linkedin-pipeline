@@ -24,7 +24,7 @@ def dedup_and_rank(articles: list[dict], top_n: int = 10) -> list[dict]:
         tfidf = vectorizer.fit_transform(texts)
         sim = cosine_similarity(tfidf)
     except Exception as e:
-        logger.warning("TF-IDF failed (%s); returning first %d articles.", e, top_n)
+        logger.warning("TF-IDF fehlgeschlagen (%s); die ersten %d Artikel werden zurückgegeben.", e, top_n)
         return articles[:top_n]
 
     n = len(articles)
@@ -43,7 +43,7 @@ def dedup_and_rank(articles: list[dict], top_n: int = 10) -> list[dict]:
 
     selected = [articles[i] for i in kept]
     logger.info(
-        "dedup_and_rank: %d → %d articles (threshold=%.2f)",
+        "dedup_and_rank: %d → %d Artikel (Schwellenwert=%.2f)",
         n,
         len(selected),
         DEDUP_THRESHOLD,

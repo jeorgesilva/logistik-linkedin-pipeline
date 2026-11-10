@@ -1,9 +1,9 @@
-"""On-demand full-text extractor for a single URL.
+"""Volltext-Extraktor auf Abruf für eine einzelne URL.
 
-NOT called automatically by the pipeline. Use this interactively or from a script
-to fetch and inspect article text before adding it to manual_articles.json.
+Wird von der Pipeline NICHT automatisch aufgerufen. Interaktiv oder aus einem Skript nutzen,
+um Artikeltext abzurufen und zu prüfen, bevor er in manual_articles.json übernommen wird.
 
-Example:
+Beispiel:
     python -c "
     import sys; sys.path.insert(0, '.')
     from scripts.debug.fetch_article import fetch_article_text
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 def fetch_article_text(url: str) -> str:
-    """Extract full text from url using trafilatura. Returns empty string on failure."""
+    """Extrahiert den Volltext der URL mit trafilatura. Gibt bei Fehler einen leeren String zurück."""
     try:
         downloaded = trafilatura.fetch_url(url)
         if not downloaded:

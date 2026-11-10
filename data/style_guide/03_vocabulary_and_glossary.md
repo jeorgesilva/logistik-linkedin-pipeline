@@ -2,14 +2,14 @@
 
 *For institutional/self-promotional filler to avoid in opinion posts (e.g. „unsere Mission", „unser Ansatz"), see the dedicated table in `01_tone_and_voice.md` — that's about register, not terminology, so it lives there.*
 
-## Preferred Vocabulary — LogAid Brand Terms
+## Preferred Vocabulary — Frachtwerk Brand Terms
 
 These are the exact terms used in approved posts. Use these, not paraphrases.
 
 ### Company & Product
 | Preferred | Not this |
 |---|---|
-| LogAid / LOGAID | "our platform", "the tool", "the software" |
+| Frachtwerk / FRACHTWERK | "our platform", "the tool", "the software" |
 | Datenhoheit | "Datenschutz" (when referring to architectural control), "Privacy" |
 | DSGVO-konform | "datenschutzkonform", "privacy-compliant" |
 | deutsche Cloud | "EU-Cloud" (when specifically German infrastructure) |
@@ -58,8 +58,8 @@ These are the exact terms used in approved posts. Use these, not paraphrases.
 
 | Term | Definition | English equivalent |
 |---|---|---|
-| **Disposition / Dispo** | The planning and coordination of freight transport; the core function LogAid automates | Dispatch / Dispatching |
-| **Disponent** | The person responsible for dispatch; primary LogAid user | Dispatcher |
+| **Disposition / Dispo** | The planning and coordination of freight transport; the core function Frachtwerk automates | Dispatch / Dispatching |
+| **Disponent** | The person responsible for dispatch; primary Frachtwerk user | Dispatcher |
 | **Freileitungsbau** | Construction of overhead power lines | Overhead power line construction |
 | **Netzausbau** | Expansion of the power grid or transport network | Grid/network expansion |
 | **Avisierung** | Pre-notification of a delivery to the recipient | Delivery pre-notification / Advising |

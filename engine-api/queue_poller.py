@@ -1,13 +1,13 @@
-"""Background poller for the offline-friendly request queue.
+"""Hintergrund-Poller für die Warteschlange bei ausgeschaltetem Rechner.
 
-Lets a colleague click "Posts generieren" on the small always-on Cloudflare Worker
-page (cloudflare-worker/) even while this machine is offline. The request
-sits in the Worker's KV store until this poller — which only runs while
-engine-api itself is up — picks it up, runs the pipeline, and reports the
-result back.
+Ermöglicht einem Teammitglied, auf der kleinen, immer erreichbaren Seite des Cloudflare
+Workers (cloudflare-worker/) auf „Posts generieren“ zu klicken, auch wenn dieser Rechner
+offline ist. Die Anfrage liegt im KV-Store des Workers, bis dieser Poller — der nur läuft,
+solange die engine-api selbst läuft — sie abholt, die Pipeline ausführt und das Ergebnis
+zurückmeldet.
 
-No-op if QUEUE_WORKER_URL / QUEUE_SHARED_SECRET are not set, so this is safe
-to leave enabled in environments that don't use the queue feature.
+No-op, wenn QUEUE_WORKER_URL / QUEUE_SHARED_SECRET nicht gesetzt sind; kann daher gefahrlos
+auch in Umgebungen aktiviert bleiben, die die Warteschlange nicht nutzen.
 """
 from __future__ import annotations
 
@@ -27,17 +27,17 @@ QUEUE_POLL_INTERVAL_SECONDS = int(os.getenv("QUEUE_POLL_INTERVAL_SECONDS", "60")
 
 
 def _auth_headers() -> dict:
-    # Built at call time (not module load time) so the current value of
-    # QUEUE_SHARED_SECRET is always used — matters for tests that monkeypatch it.
+    # Beim Aufruf erzeugt (nicht beim Laden des Moduls), damit immer der aktuelle Wert von
+    # QUEUE_SHARED_SECRET verwendet wird — wichtig für Tests, die ihn per Monkeypatch setzen.
     return {"X-Queue-Secret": QUEUE_SHARED_SECRET}
 
 
 def poll_once() -> bool:
-    """Check the Worker for one pending request; process it if found.
+    """Fragt beim Worker eine offene Anfrage ab und verarbeitet sie, falls vorhanden.
 
-    Returns True if a request was found (and processed, successfully or not),
-    False if the queue feature is disabled or nothing is pending. Blocking by
-    design — call it via asyncio.to_thread from poll_loop().
+    Gibt True zurück, wenn eine Anfrage gefunden (und verarbeitet, erfolgreich oder nicht)
+    wurde, False, wenn die Warteschlange deaktiviert oder nichts offen ist. Absichtlich
+    blockierend — über asyncio.to_thread aus poll_loop() aufrufen.
     """
     if not QUEUE_WORKER_URL or not QUEUE_SHARED_SECRET:
         return False
@@ -51,22 +51,22 @@ def poll_once() -> bool:
         resp.raise_for_status()
         data = resp.json()
     except Exception as e:
-        logger.warning("Queue poll failed (worker unreachable?): %s", e)
+        logger.warning("Queue-Abfrage fehlgeschlagen (Worker nicht erreichbar?): %s", e)
         return False
 
     if not data.get("pending"):
         return False
 
     requested_at = data.get("requested_at")
-    logger.info("Queue: pending request found (requested_at=%s) — running pipeline", requested_at)
+    logger.info("Queue: offene Anfrage gefunden (requested_at=%s) — Pipeline wird gestartet", requested_at)
 
     try:
         result = run_batch()
-        summary = f"{result.get('created', 0)} posts criados."
+        summary = f"{result.get('created', 0)} Posts erstellt."
         _report_complete(status="done", requested_at=requested_at, result_summary=summary)
-        logger.info("Queue: request processed — %s", summary)
+        logger.info("Queue: Anfrage verarbeitet — %s", summary)
     except Exception as e:
-        logger.error("Queue: pipeline run failed — %s", e)
+        logger.error("Queue: Pipeline-Lauf fehlgeschlagen — %s", e)
         _report_complete(status="error", requested_at=requested_at, result_summary=str(e)[:300])
 
     return True
@@ -85,17 +85,17 @@ def _report_complete(*, status: str, requested_at: str, result_summary: str) -> 
             timeout=15,
         )
     except Exception as e:
-        logger.error("Queue: failed to report completion back to the worker: %s", e)
+        logger.error("Queue: Abschluss konnte nicht an den Worker gemeldet werden: %s", e)
 
 
 async def poll_loop() -> None:
-    """Run poll_once() on a timer for as long as engine-api is up."""
+    """Führt poll_once() zeitgesteuert aus, solange die engine-api läuft."""
     if not QUEUE_WORKER_URL or not QUEUE_SHARED_SECRET:
-        logger.info("Queue poller disabled (QUEUE_WORKER_URL/QUEUE_SHARED_SECRET not set)")
+        logger.info("Queue-Poller deaktiviert (QUEUE_WORKER_URL/QUEUE_SHARED_SECRET nicht gesetzt)")
         return
 
     logger.info(
-        "Queue poller started — checking %s every %ds",
+        "Queue-Poller gestartet — prüft %s alle %ds",
         QUEUE_WORKER_URL,
         QUEUE_POLL_INTERVAL_SECONDS,
     )
@@ -103,5 +103,5 @@ async def poll_loop() -> None:
         try:
             await asyncio.to_thread(poll_once)
         except Exception as e:
-            logger.error("Queue poller loop error: %s", e)
+            logger.error("Queue-Poller: Fehler in der Schleife: %s", e)
         await asyncio.sleep(QUEUE_POLL_INTERVAL_SECONDS)

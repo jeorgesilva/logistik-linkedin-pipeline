@@ -1,6 +1,6 @@
-# LogAid LinkedIn Style Guide — Overview
+# Frachtwerk LinkedIn Style Guide — Overview
 **Version:** 1.0  
-**Scope:** LinkedIn posts (DE + EN) for LogAid — AI-driven dispatch automation for freight forwarders  
+**Scope:** LinkedIn posts (DE + EN) for Frachtwerk — AI-driven dispatch automation for freight forwarders  
 **Audience:** Spediteure, Verlader, Disponenten, Logistics Mittelstand in DACH region
 
 ---

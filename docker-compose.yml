@@ -48,10 +48,10 @@ services:
       - chroma_data:/data/chroma
     env_file: .env
     ports:
-      # Bound to localhost only — public access goes through the cloudflared
-      # tunnel below, not through a directly exposed port. Keeping this bound
-      # to 127.0.0.1 (instead of removing it) preserves SSH-tunnel/debug access
-      # from the VPS itself without exposing the port to 0.0.0.0.
+      # Nur an localhost gebunden — öffentlicher Zugriff läuft über den
+      # cloudflared-Tunnel unten, nicht über einen direkt freigegebenen Port. Die
+      # Bindung an 127.0.0.1 (statt den Port ganz zu entfernen) erhält den
+      # SSH-Tunnel-/Debug-Zugriff vom VPS selbst, ohne den Port auf 0.0.0.0 zu öffnen.
       - "127.0.0.1:8000:8000"
     depends_on:
       ollama:
@@ -75,7 +75,7 @@ services:
     environment:
       - ENGINE_API_URL=http://engine-api:8000
     ports:
-      # Same rationale as engine-api above: localhost-only, public access via cloudflared.
+      # Gleiche Begründung wie bei engine-api oben: nur localhost, öffentlicher Zugriff über cloudflared.
       - "127.0.0.1:8503:8501"
     depends_on:
       engine-api:
@@ -89,7 +89,7 @@ services:
     volumes:
       - n8n_data:/home/node/.n8n
     ports:
-      # Same rationale as engine-api above: localhost-only, public access via cloudflared.
+      # Gleiche Begründung wie bei engine-api oben: nur localhost, öffentlicher Zugriff über cloudflared.
       - "127.0.0.1:5678:5678"
     environment:
       - GENERIC_TIMEZONE=${GENERIC_TIMEZONE:-Europe/Berlin}
@@ -106,17 +106,17 @@ services:
     image: cloudflare/cloudflared:latest
     container_name: cloudflared
     networks: [pipeline_net]
-    # Quick Tunnel mode: no Cloudflare zone/domain needed, free. Cloudflare
-    # assigns a random https://*.trycloudflare.com hostname on every start and
-    # prints it to this container's logs (`docker logs cloudflared`) — it is
-    # NOT stable across restarts. Only exposes engine-api (what the
-    # cloudflare-dashboard needs); review-ui/n8n stay localhost-only.
-    # Superseded the previous named/token tunnel (CLOUDFLARE_TUNNEL_TOKEN in
-    # .env is no longer read by this command, left in place unused).
-    # --protocol http2: QUIC (the default) fails to hold a stable control
-    # stream over Colima's network on this machine (constant "control stream
-    # encountered a failure" / QUIC handshake timeouts in `docker logs
-    # cloudflared`). HTTP/2 is TCP-based and works reliably here instead.
+    # Quick-Tunnel-Modus: keine Cloudflare-Zone/-Domain nötig, kostenlos. Cloudflare
+    # vergibt bei jedem Start einen zufälligen https://*.trycloudflare.com-Hostnamen
+    # und gibt ihn in den Logs dieses Containers aus (`docker logs cloudflared`) — er
+    # ist über Neustarts hinweg NICHT stabil. Gibt nur engine-api frei (was das
+    # cloudflare-dashboard braucht); review-ui/n8n bleiben nur auf localhost.
+    # Ersetzt den früheren benannten Tunnel per Token (CLOUDFLARE_TUNNEL_TOKEN in
+    # .env wird von diesem Befehl nicht mehr gelesen, bleibt ungenutzt stehen).
+    # --protocol http2: QUIC (der Standard) hält über das Colima-Netzwerk auf diesem
+    # Rechner keinen stabilen Control-Stream (ständig "control stream encountered a
+    # failure" / QUIC-Handshake-Timeouts in `docker logs cloudflared`). HTTP/2 läuft
+    # über TCP und funktioniert hier stattdessen zuverlässig.
     command: tunnel --protocol http2 --url http://engine-api:8000
     depends_on:
       engine-api:

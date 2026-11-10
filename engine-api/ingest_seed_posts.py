@@ -1,25 +1,25 @@
-"""Bootstrap script — inserts approved seed posts into SQLite and the KB.
+"""Bootstrap-Skript — legt freigegebene Seed-Posts in SQLite und in der KB an.
 
-Run once inside the engine-api container after first build:
+Einmalig im engine-api-Container nach dem ersten Build ausführen:
     docker exec engine-api python ingest_seed_posts.py
 """
 
 import os
 import sys
 
-# Ensure the module path is correct when run inside the container
+# Sicherstellen, dass der Modulpfad stimmt, wenn das Skript im Container läuft
 sys.path.insert(0, os.path.dirname(__file__))
 
 import db
 import kb
 
 # ---------------------------------------------------------------------------
-# Seed posts — cleaned (LinkedIn URL artefacts removed)
+# Seed-Posts — bereinigt (LinkedIn-URL-Artefakte entfernt)
 # ---------------------------------------------------------------------------
 
 SEED_POSTS = [
     {
-        "topic": "Aviação e Infraestrutura",
+        "topic": "Luftfahrt und Infrastruktur",
         "title": "Wenn konventionelle Methoden an ihre Grenzen stossen … fliegen wir weiter.",
         "source_url": "",
         "post_text": (
@@ -46,7 +46,7 @@ SEED_POSTS = [
         ),
     },
     {
-        "topic": "Regulação e Soberania de Dados",
+        "topic": "Regulierung und Datensouveränität",
         "title": "KI-Modell über Nacht abgeschaltet — Datenhoheit ist kein Buzzword",
         "source_url": "",
         "post_text": (
@@ -60,7 +60,7 @@ SEED_POSTS = [
             "In Ihrem Postfach steckt das Sensibelste, was Sie haben: Sendungsdaten, Preise, Empfängeradressen, "
             "Schadensfälle. Wo diese Daten verarbeitet werden und wer das System im Zweifel abschalten kann, ist "
             "keine IT-Fußnote. Es ist eine Frage von Betriebssicherheit und Vertrauen.\n\n"
-            "Genau deshalb bauen wir LogAid auf Datenhoheit: Verarbeitung in Europa, eine Architektur ohne "
+            "Genau deshalb bauen wir Frachtwerk auf Datenhoheit: Verarbeitung in Europa, eine Architektur ohne "
             "Abhängigkeit von einem einzigen Anbieter – und der Grundsatz, dass keine Antwort ohne Freigabe "
             "Ihres Disponenten rausgeht.\n\n"
             "Souveränität ist kein Fahnenschwenken. Es ist Risikomanagement.\n\n"
@@ -99,7 +99,7 @@ SEED_POSTS = [
             "macht aus einer transaktionalen Beziehung eine belastbare Partnerschaft.\n\n"
             "Im Blogpost gehen wir tiefer rein: Frühwarnindikatoren, vier konkrete Schritte, "
             "wie Sie Ihr Portfolio jetzt absichern. 👉 https://lnkd.in/emEFz8GH\n\n"
-            "#logistik #speditionen #kommunikation #logaid"
+            "#logistik #speditionen #kommunikation #frachtwerk"
         ),
     },
     {
@@ -118,7 +118,7 @@ SEED_POSTS = [
             "Besonders interessant für uns in der Logistik: Asien zieht massiv an, sobald die "
             "Sprachmodelle in der Landessprache funktionieren. Für deutschsprachige Speditionen heißt "
             "das – die technische Barriere ist gefallen. Was fehlt, ist die operative Integration.\n\n"
-            "Genau hier setzen wir mit LOGAID an. Routine-Dispo wie Statusabfragen, ETA-Updates, "
+            "Genau hier setzen wir mit FRACHTWERK an. Routine-Dispo wie Statusabfragen, ETA-Updates, "
             "Rückfragen aus dem Postfach, Stammdatenpflege – Vorgänge, die jeden Tag Stunden verschlingen "
             "– werden automatisch entschieden und ausgeführt. Über TMS, Telematik und Postfach hinweg. "
             "DSGVO-konform, deutsche Cloud.\n\n"
@@ -142,7 +142,7 @@ SEED_POSTS = [
             "Here's what the insolvency statistics don't show: the average freight forwarder processes "
             "hundreds of emails per day. Manually. Shipment requests, quotes, status updates — copy-pasted "
             "by dispatchers who are already the most stretched people in the building.\n\n"
-            "That's the problem LOGAID is built to fix.\n\n"
+            "That's the problem FRACHTWERK is built to fix.\n\n"
             "We automate email processing for freight forwarders and transport companies — extracting data, "
             "routing requests, generating responses — directly from the inbox, directly into existing "
             "workflows. No migration. No retraining. Just the hours back that operators are currently "
@@ -163,10 +163,10 @@ SEED_POSTS = [
 
 def main():
     db.init_db()
-    print(f"Ingesting {len(SEED_POSTS)} seed posts into SQLite + KB...\n")
+    print(f"Lese {len(SEED_POSTS)} Seed-Posts in SQLite + KB ein...\n")
 
     for i, p in enumerate(SEED_POSTS, 1):
-        # Insert into SQLite as an approved post (skip if source_url already exists)
+        # Als freigegebenen Post in SQLite anlegen (überspringen, wenn source_url schon existiert)
         post_id = db.insert_post(
             topic=p["topic"],
             source_url=p.get("source_url", ""),
@@ -176,7 +176,7 @@ def main():
         )
         print(f"[{i}/{len(SEED_POSTS)}] SQLite → post_id={post_id}: {p['title'][:60]}")
 
-        # Ingest into ChromaDB KB
+        # In die ChromaDB-KB einlesen
         ok = kb.ingest_post(
             post_id=post_id,
             topic=p["topic"],
@@ -187,9 +187,9 @@ def main():
         print(f"           {status}")
 
     stats = kb.get_stats()
-    print(f"\nKB stats after bootstrap: {stats}")
+    print(f"\nKB-Statistik nach dem Bootstrap: {stats}")
     print(
-        f"\nRAG is {'ACTIVE' if stats.get('rag_active') else 'INACTIVE — add more approved posts'}."
+        f"\nRAG ist {'AKTIV' if stats.get('rag_active') else 'INAKTIV — weitere Posts genehmigen'}."
     )
 
 

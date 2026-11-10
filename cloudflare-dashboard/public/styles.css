@@ -52,7 +52,7 @@ html, body {
 
 button { font-family: inherit; }
 
-/* ---------- Buttons ---------- */
+/* ---------- Schaltflächen ---------- */
 .btn {
   font-size: 0.875rem;
   font-weight: 600;
@@ -99,7 +99,7 @@ button { font-family: inherit; }
 }
 .icon-btn:hover { background: var(--sidebar-bg-hover); color: var(--sidebar-text); }
 
-/* ---------- Setup screen ---------- */
+/* ---------- Einrichtungsbildschirm ---------- */
 .setup-screen {
   min-height: 100vh;
   display: flex;
@@ -131,7 +131,7 @@ button { font-family: inherit; }
 .setup-card input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
 .setup-hint { font-size: 0.75rem; color: var(--text-faint); margin-top: 14px; }
 
-/* ---------- App shell ---------- */
+/* ---------- App-Grundgerüst ---------- */
 .app-shell {
   display: grid;
   grid-template-columns: 264px 1fr;
@@ -225,7 +225,7 @@ button { font-family: inherit; }
 .connection-dot.error { background: #F87171; box-shadow: 0 0 0 3px rgba(248,113,113,0.2); }
 .connection-label { font-size: 0.78rem; color: var(--sidebar-text-muted); flex: 1; }
 
-/* ---------- Content ---------- */
+/* ---------- Inhalt ---------- */
 .content { padding: 32px 40px; max-width: 1400px; }
 .content-header {
   display: flex;
@@ -285,7 +285,7 @@ button { font-family: inherit; }
   margin-bottom: 18px;
 }
 
-/* ---------- Post grid & cards ---------- */
+/* ---------- Post-Raster & -Karten ---------- */
 .post-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -355,7 +355,7 @@ button { font-family: inherit; }
   padding-top: 6px;
 }
 
-/* ---------- Drawer ---------- */
+/* ---------- Seitenpanel ---------- */
 .drawer-overlay {
   position: fixed; inset: 0;
   background: rgba(10, 12, 24, 0.45);
@@ -444,7 +444,7 @@ textarea:focus, input[type="text"]:focus { outline: none; border-color: var(--pr
 }
 .reject-box p { margin: 0; font-size: 0.85rem; color: #9F1239; font-weight: 600; }
 
-/* ---------- Settings modal ---------- */
+/* ---------- Einstellungsdialog ---------- */
 .modal {
   position: fixed;
   top: 50%; left: 50%;
@@ -460,7 +460,7 @@ textarea:focus, input[type="text"]:focus { outline: none; border-color: var(--pr
 .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 #settings-overlay { z-index: 40; }
 
-/* ---------- Responsive ---------- */
+/* ---------- Responsives Layout ---------- */
 @media (max-width: 860px) {
   .app-shell { grid-template-columns: 1fr; }
   .sidebar { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; }

@@ -60,19 +60,19 @@ for i, article in enumerate(ARTICLES, 1):
     print("-" * 60)
 
     rel = evaluate_relevance(article)
-    rel_flag = rel.get("relevante") if rel else False
-    print(f"RELEVANCE → {rel_flag} | {(rel.get('motivo', '') if rel else 'parse error')[:120]}")
+    rel_flag = rel.get("relevant") if rel else False
+    print(f"RELEVANCE → {rel_flag} | {(rel.get('reason', '') if rel else 'parse error')[:120]}")
 
     if not rel or not rel_flag:
         print("→ DESCARTADO (relevance). Próximo artigo.\n")
         continue
 
-    bridge = build_bridge(article, rel.get("motivo", ""))
+    bridge = build_bridge(article, rel.get("reason", ""))
     if not bridge:
         print("→ DESCARTADO (bridge inválida ou impacto genérico). Próximo artigo.\n")
         continue
 
-    print(f"BRIDGE impacto → {bridge.get('impacto_para_spedition', '')[:120]}")
+    print(f"BRIDGE impact → {bridge.get('impact_for_forwarders', '')[:120]}")
 
     post = generate_post(article, bridge)
     if not post:

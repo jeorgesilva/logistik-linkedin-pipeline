@@ -12,3 +12,5 @@ node_modules/
 
 # Local-only implementation roadmaps
 ROTEIRO_*.md
+# Lokale Arbeitsanweisungen für Claude Code
+CLAUDE.md

@@ -1,23 +1,22 @@
 /**
- * Logistik LinkedIn Pipeline — offline-friendly request queue.
+ * Logistik LinkedIn Pipeline — Warteschlange für Anfragen bei ausgeschaltetem Rechner.
  *
- * Lets a colleague click "Posts generieren" on a page that is always online
- * (this Worker), even while the machine that actually runs the pipeline
- * (engine-api + Ollama, on someone's computer) is turned off. The click is
- * stored here in KV as a single pending record; engine-api's queue_poller.py
- * polls /api/pending whenever it's online, runs the pipeline, and reports
- * back via /api/complete.
+ * Ermöglicht einem Teammitglied, auf einer immer erreichbaren Seite (diesem Worker) auf
+ * „Posts generieren“ zu klicken, auch wenn der Rechner, auf dem die Pipeline tatsächlich
+ * läuft (engine-api + Ollama, auf jemandes Computer), ausgeschaltet ist. Der Klick wird
+ * hier in KV als ein einzelner offener Eintrag gespeichert; queue_poller.py der engine-api
+ * fragt /api/pending ab, sobald sie online ist, führt die Pipeline aus und meldet das
+ * Ergebnis über /api/complete zurück.
  *
- * Only one request is tracked at a time (KV_KEY below) — this is meant for
- * "one colleague, occasional clicks", not a real multi-job queue. If that
- * ever changes, swap the single KV key for a D1 table.
+ * Es wird immer nur eine Anfrage gleichzeitig verfolgt (KV_KEY unten) — gedacht für
+ * „ein Teammitglied, gelegentliche Klicks“, nicht für eine echte Mehrfach-Job-Queue. Falls
+ * sich das ändert, den einzelnen KV-Schlüssel durch eine D1-Tabelle ersetzen.
  *
- * Also doubles as a directory for engine-api's current public URL: the
- * machine running engine-api sits behind a free Cloudflare Quick Tunnel,
- * whose hostname is randomly regenerated on every restart. tunnel_reporter.py
- * (engine-api) pushes the current one here whenever it changes; the
- * cloudflare-dashboard fetches it on load instead of requiring a human to
- * paste a fresh URL in by hand each time.
+ * Dient außerdem als Verzeichnis für die aktuelle öffentliche URL der engine-api: Der
+ * Rechner mit der engine-api liegt hinter einem kostenlosen Cloudflare Quick Tunnel, dessen
+ * Hostname bei jedem Neustart zufällig neu vergeben wird. tunnel_reporter.py (engine-api)
+ * überträgt den aktuellen bei jeder Änderung hierher; das cloudflare-dashboard ruft ihn beim
+ * Laden ab, statt dass jedes Mal jemand eine neue URL von Hand einfügen muss.
  */
 
 const KV_KEY = "latest_request";
@@ -70,16 +69,16 @@ function json(data, status = 200) {
   });
 }
 
-// POST /api/request — colleague clicks the button. Public endpoint, same
-// trust level as engine-api's own POST /run (no auth today). If you want to
-// restrict who can trigger this, put Cloudflare Access in front of this
-// Worker's route rather than adding auth here.
+// POST /api/request — das Teammitglied klickt den Button. Öffentlicher Endpunkt, dieselbe
+// Vertrauensstufe wie POST /run der engine-api (derzeit ohne Authentifizierung). Um
+// einzuschränken, wer das auslösen kann, Cloudflare Access vor die Route dieses Workers
+// schalten, statt hier eine Authentifizierung einzubauen.
 async function handleRequest(env) {
   const raw = await env.QUEUE_KV.get(KV_KEY);
   if (raw) {
     const existing = JSON.parse(raw);
     if (existing.status === "pending" || existing.status === "processing") {
-      // Already an active request in flight — don't stack a second one.
+      // Es läuft bereits eine aktive Anfrage — keine zweite stapeln.
       return json({ ...existing, already_queued: true });
     }
   }
@@ -94,14 +93,14 @@ async function handleRequest(env) {
   return json(record);
 }
 
-// GET /api/status — polled by the button page to show current state.
+// GET /api/status — wird von der Button-Seite abgefragt, um den aktuellen Zustand anzuzeigen.
 async function handleStatus(env) {
   const raw = await env.QUEUE_KV.get(KV_KEY);
   if (!raw) return json({ status: "idle" });
   return json(JSON.parse(raw));
 }
 
-// GET /api/pending — polled by engine-api's queue_poller.py (secret-protected).
+// GET /api/pending — wird von queue_poller.py der engine-api abgefragt (per Secret geschützt).
 async function handlePending(env) {
   const raw = await env.QUEUE_KV.get(KV_KEY);
   if (!raw) return json({ pending: false });
@@ -109,14 +108,14 @@ async function handlePending(env) {
   const record = JSON.parse(raw);
   if (record.status !== "pending") return json({ pending: false });
 
-  // Flip to "processing" immediately so a second poll (engine-api restarting
-  // mid-run, or a slow pipeline) doesn't pick up the same job twice.
+  // Sofort auf "processing" umstellen, damit eine zweite Abfrage (Neustart der engine-api
+  // mitten im Lauf oder eine langsame Pipeline) denselben Job nicht doppelt abholt.
   record.status = "processing";
   await env.QUEUE_KV.put(KV_KEY, JSON.stringify(record));
   return json({ pending: true, ...record });
 }
 
-// POST /api/complete — engine-api reports the result back (secret-protected).
+// POST /api/complete — die engine-api meldet das Ergebnis zurück (per Secret geschützt).
 async function handleComplete(request, env) {
   let body;
   try {
@@ -135,13 +134,13 @@ async function handleComplete(request, env) {
   return json({ ok: true });
 }
 
-// GET /api/tunnel-url — polled by cloudflare-dashboard on load to find the
-// current engine-api URL. Public: the URL itself isn't a secret, it's what
-// the dashboard needs to even start talking to the API. Called cross-origin
-// (from logistik-dashboard's own origin), so needs an explicit CORS header —
-// unlike /api/request and /api/status, which the button page itself calls
-// same-origin, and /api/pending and /api/complete, which engine-api calls
-// server-side (no browser, no CORS involved).
+// GET /api/tunnel-url — wird von cloudflare-dashboard beim Laden abgefragt, um die aktuelle
+// URL der engine-api zu finden. Öffentlich: Die URL selbst ist kein Geheimnis, das Dashboard
+// braucht sie überhaupt erst, um mit der API zu sprechen. Wird Cross-Origin aufgerufen (vom
+// eigenen Origin von logistik-dashboard) und braucht daher einen expliziten CORS-Header —
+// anders als /api/request und /api/status, die die Button-Seite selbst Same-Origin aufruft,
+// und /api/pending und /api/complete, die die engine-api serverseitig aufruft (kein Browser,
+// kein CORS beteiligt).
 async function handleGetTunnelUrl(env) {
   const url = await env.QUEUE_KV.get(TUNNEL_KV_KEY);
   return new Response(JSON.stringify({ url: url || null }), {
@@ -153,9 +152,9 @@ async function handleGetTunnelUrl(env) {
   });
 }
 
-// POST /api/tunnel-url — reported by engine-api's tunnel_reporter.py
-// whenever the Quick Tunnel hostname changes (secret-protected, same trust
-// level as /api/pending and /api/complete).
+// POST /api/tunnel-url — wird von tunnel_reporter.py der engine-api gemeldet, sobald sich
+// der Hostname des Quick Tunnels ändert (per Secret geschützt, dieselbe Vertrauensstufe wie
+// /api/pending und /api/complete).
 async function handleSetTunnelUrl(request, env) {
   let body;
   try {

@@ -57,10 +57,10 @@ def ingest_post(post_id: int, topic: str, title: str, post_text: str) -> bool:
             documents=[post_text],
             metadatas=[{"post_id": post_id, "topic": topic, "title": title}],
         )
-        logger.info("Ingested post %d into style_examples KB", post_id)
+        logger.info("Post %d in KB style_examples eingelesen", post_id)
         return True
     except Exception as e:
-        logger.error("Failed to ingest post %d into KB: %s", post_id, e)
+        logger.error("Post %d konnte nicht in die KB eingelesen werden: %s", post_id, e)
         return False
 
 
@@ -76,10 +76,10 @@ def ingest_rejected_post(post_id: int, topic: str, title: str, post_text: str, r
             documents=[post_text],
             metadatas=[{"post_id": post_id, "topic": topic, "title": title, "reason": reason}],
         )
-        logger.info("Ingested rejected post %d into rejected_examples KB", post_id)
+        logger.info("Abgelehnter Post %d in KB rejected_examples eingelesen", post_id)
         return True
     except Exception as e:
-        logger.error("Failed to ingest rejected post %d into KB: %s", post_id, e)
+        logger.error("Abgelehnter Post %d konnte nicht in die KB eingelesen werden: %s", post_id, e)
         return False
 
 
@@ -93,10 +93,10 @@ def ingest_guideline(doc_id: str, text: str, metadata: dict) -> bool:
             documents=[text],
             metadatas=[metadata],
         )
-        logger.debug("Ingested guideline chunk %s", doc_id)
+        logger.debug("Style-Guide-Abschnitt %s eingelesen", doc_id)
         return True
     except Exception as e:
-        logger.error("Failed to ingest guideline %s: %s", doc_id, e)
+        logger.error("Style-Guide-Abschnitt %s konnte nicht eingelesen werden: %s", doc_id, e)
         return False
 
 
@@ -106,11 +106,11 @@ def retrieve_for_article(
     n_guidelines: int = 2,
     n_rejected: int = 2,
 ) -> dict:
-    """Return {examples: [...], guidelines: [...], rejected: [...]} for injection into the LLM prompt.
+    """Gibt {examples: [...], guidelines: [...], rejected: [...]} zum Einfügen in den LLM-Prompt zurück.
 
-    Returns empty lists if KB has fewer than KB_MIN_EXAMPLES approved posts (or fewer than
-    KB_MIN_REJECTED rejected posts, for the `rejected` list specifically), or if Ollama / ChromaDB
-    is unavailable — pipeline continues unaffected.
+    Gibt leere Listen zurück, wenn die KB weniger als KB_MIN_EXAMPLES freigegebene Posts enthält
+    (bzw. für die Liste `rejected` weniger als KB_MIN_REJECTED abgelehnte Posts) oder wenn Ollama /
+    ChromaDB nicht verfügbar ist — die Pipeline läuft unbeeinträchtigt weiter.
     """
     try:
         ex_col, gu_col, rej_col = _get_collections()
@@ -118,7 +118,7 @@ def retrieve_for_article(
         ex_count = ex_col.count()
         if ex_count < KB_MIN_EXAMPLES:
             logger.debug(
-                "KB has %d example(s), minimum is %d — skipping RAG retrieval",
+                "KB hat %d Beispiel(e), Minimum ist %d — RAG-Abruf wird übersprungen",
                 ex_count,
                 KB_MIN_EXAMPLES,
             )
@@ -162,13 +162,13 @@ def retrieve_for_article(
                 })
 
         logger.debug(
-            "KB retrieved %d examples, %d guideline chunks, %d rejected examples",
+            "KB lieferte %d Beispiele, %d Style-Guide-Abschnitte, %d abgelehnte Beispiele",
             len(examples), len(guidelines), len(rejected),
         )
         return {"examples": examples, "guidelines": guidelines, "rejected": rejected}
 
     except Exception as e:
-        logger.error("KB retrieval failed (pipeline continues without RAG): %s", e)
+        logger.error("KB-Abruf fehlgeschlagen (Pipeline läuft ohne RAG weiter): %s", e)
         return {"examples": [], "guidelines": [], "rejected": []}
 
 
@@ -188,7 +188,7 @@ def get_stats() -> dict:
             "rejected_rag_active": n_rejected >= KB_MIN_REJECTED,
         }
     except Exception as e:
-        logger.error("KB stats failed: %s", e)
+        logger.error("KB-Statistik fehlgeschlagen: %s", e)
         return {
             "style_examples": 0,
             "style_guidelines": 0,
@@ -200,14 +200,14 @@ def get_stats() -> dict:
 
 
 def ingest_style_guide(path: str = STYLE_GUIDE_PATH) -> dict:
-    """Chunk all .md files in path by ## sections and upsert into style_guidelines."""
+    """Zerlegt alle .md-Dateien im Pfad nach ##-Abschnitten und schreibt sie per Upsert in style_guidelines."""
     guide_path = Path(path)
     if not guide_path.exists():
-        logger.warning("Style guide path not found: %s", path)
+        logger.warning("Style-Guide-Pfad nicht gefunden: %s", path)
         return {"ingested": 0, "failed": 0, "error": "path not found"}
 
     md_files = sorted(guide_path.glob("*.md"))
-    logger.info("Ingesting style guide: %d files from %s", len(md_files), path)
+    logger.info("Style Guide wird eingelesen: %d Dateien aus %s", len(md_files), path)
 
     ingested = failed = 0
     for md_file in md_files:
@@ -220,10 +220,10 @@ def ingest_style_guide(path: str = STYLE_GUIDE_PATH) -> dict:
                 else:
                     failed += 1
         except Exception as e:
-            logger.error("Failed processing %s: %s", md_file.name, e)
+            logger.error("Verarbeitung von %s fehlgeschlagen: %s", md_file.name, e)
             failed += 1
 
-    logger.info("Style guide ingestion done: %d chunks ingested, %d failed", ingested, failed)
+    logger.info("Style Guide eingelesen: %d Abschnitte eingelesen, %d fehlgeschlagen", ingested, failed)
     return {"ingested": ingested, "failed": failed}
 
 

@@ -1,6 +1,6 @@
 # 06 — Point of View / Banco de Posicionamentos
 
-**Voz:** institucional LogAid, mas com posição assumida. Não é "nós ajudamos", é "nós discordamos de X" ou "nós vemos Y de forma diferente". A marca fala como quem tem uma tese sobre o mercado — não como quem está vendendo algo dentro dele.
+**Voz:** institucional Frachtwerk, mas com posição assumida. Não é "nós ajudamos", é "nós discordamos de X" ou "nós vemos Y de forma diferente". A marca fala como quem tem uma tese sobre o mercado — não como quem está vendendo algo dentro dele.
 
 Este arquivo existe para resolver um problema específico: como manter o mesmo ponto de vista reconhecível em posts sobre assuntos completamente diferentes (regulação hoje, insolvência amanhã, relatório de IA depois) sem parecer que cada post foi escrito por uma pessoa diferente. A resposta é não improvisar uma opinião nova a cada post — é aplicar uma de um conjunto fixo de convicções a um evento novo.
 
@@ -12,13 +12,13 @@ Este arquivo existe para resolver um problema específico: como manter o mesmo p
 
 **Para:** comunicação é o maior custo oculto da logística. Quem resolver essa camada primeiro — não quem tiver o dashboard mais bonito — decide a próxima geração do setor.
 
-Essa é a tese oficial da LogAid (já existe no site, nos "Stempel-Sätze"). Todo post de opinião, direta ou indiretamente, deveria remar na direção dela. Ela é o teto; as 8 crenças abaixo são os cômodos.
+Essa é a tese oficial da Frachtwerk (já existe no site, nos "Stempel-Sätze"). Todo post de opinião, direta ou indiretamente, deveria remar na direção dela. Ela é o teto; as 8 crenças abaixo são os cômodos.
 
 ---
 
 ## O banco de crenças
 
-Cada crença é uma afirmação contestável — algo com que uma parte do mercado discordaria — não um rótulo de tema. Cada uma nasceu de material real da LogAid (Manifesto, About, comparações de produto, posts já publicados), não foi inventada para este guide.
+Cada crença é uma afirmação contestável — algo com que uma parte do mercado discordaria — não um rótulo de tema. Cada uma nasceu de material real da Frachtwerk (Manifesto, About, comparações de produto, posts já publicados), não foi inventada para este guide.
 
 ### 1. Comunicação é o custo mais caro e mais invisível da logística
 O setor investe em visibilidade, forecasting, otimização de rota — o que aparece em slide de investidor. Ignora o que realmente consome a operação: centenas de e-mails por dia, decididos manualmente.
@@ -66,12 +66,12 @@ A barreira técnica caiu; falta integração operacional, não capacidade de mod
 
 Antes de escrever qualquer post, faça duas perguntas:
 
-1. **Qual é a questão contestada aqui?** — não "qual é o assunto", mas onde há divergência real: alguém no mercado age, pensa ou vende de um jeito que a LogAid julga errado ou incompleto.
+1. **Qual é a questão contestada aqui?** — não "qual é o assunto", mas onde há divergência real: alguém no mercado age, pensa ou vende de um jeito que a Frachtwerk julga errado ou incompleto.
 2. **Qual crença do banco (acima) resolve essa divergência?** — pode ser uma só, ou duas combinadas (ex.: crença 3 + crença 6 num post sobre por que TMS não basta e IA genérica também não).
 
-O post é então estruturado para defender essa crença usando o evento/dado do dia como prova — não o contrário. Se nenhuma crença do banco se aplica, é sinal de que o assunto não é prioritário para esse canal, ou que uma nova crença precisa ser adicionada aqui (com a mesma exigência: precisa vir de algo que a LogAid genuinamente defende, não de um tema em alta).
+O post é então estruturado para defender essa crença usando o evento/dado do dia como prova — não o contrário. Se nenhuma crença do banco se aplica, é sinal de que o assunto não é prioritário para esse canal, ou que uma nova crença precisa ser adicionada aqui (com a mesma exigência: precisa vir de algo que a Frachtwerk genuinamente defende, não de um tema em alta).
 
-**Regra de ouro:** a LogAid só é mencionada quando a crença exige uma consequência prática. Nunca é o ponto de partida do post, e frequentemente pode ficar de fora inteiramente — um post de opinião pode terminar apenas na tese, sem produto, sem CTA.
+**Regra de ouro:** a Frachtwerk só é mencionada quando a crença exige uma consequência prática. Nunca é o ponto de partida do post, e frequentemente pode ficar de fora inteiramente — um post de opinião pode terminar apenas na tese, sem produto, sem CTA.
 
 ---
 
