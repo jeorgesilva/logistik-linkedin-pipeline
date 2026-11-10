@@ -119,8 +119,8 @@ Posts werden per Retrieval-Augmented Generation mit zwei ChromaDB-Collections er
 
 | Collection | Inhalt | Aktualisiert durch |
 |---|---|---|
-| `style_examples` | Freigegebene Posts (eingebettet als Titel + Text) | Automatisch bei PATCH `status=approved`; „Sync“-Button in der UI |
-| `style_guidelines` | Style-Guide-Abschnitte (aufgeteilt nach `##`-Überschriften) | Automatisch beim Start; „Reload Style Guide“-Button in der UI |
+| `style_examples` | Freigegebene Posts (eingebettet als Titel + Text) | Automatisch bei PATCH `status=approved`; Button „Genehmigte synchronisieren“ in der UI |
+| `style_guidelines` | Style-Guide-Abschnitte (aufgeteilt nach `##`-Überschriften) | Automatisch beim Start; Button „Style Guide neu laden“ in der UI |
 
 **RAG-Ablauf:**
 ```
@@ -131,7 +131,7 @@ Neuer Artikel → embed(Titel + Text[:300]) via nomic-embed-text
 
 RAG wird stillschweigend übersprungen, wenn ChromaDB weniger als `KB_MIN_EXAMPLES` freigegebene Posts enthält, Ollama nicht erreichbar ist oder ChromaDB einen Fehler meldet. Die Pipeline läuft in jedem Fall normal weiter.
 
-**Style-Guide-Dateien** (`data/style_guide/`) liegen auf einem Docker-Volume — direkt auf dem Host bearbeiten und in der Seitenleiste auf **Reload Style Guide** klicken (oder `POST /kb/reload-guidelines`). Kein Rebuild nötig.
+**Style-Guide-Dateien** (`data/style_guide/`) liegen auf einem Docker-Volume — direkt auf dem Host bearbeiten und in der Seitenleiste auf **Style Guide neu laden** klicken (oder `POST /kb/reload-guidelines`). Kein Rebuild nötig.
 
 ---
 
