@@ -1,3 +1,4 @@
+import difflib
 import json
 import logging
 import os
@@ -18,6 +19,16 @@ MAX_POST_WORDS = int(os.getenv("MAX_POST_WORDS", "180"))
 # (Schritt 3a) lässt sich per Retry realistisch garantieren — anders als 100+ kohärente
 # Wörter für den ganzen Post in einem Durchgang zu verlangen.
 MIN_ARGUMENT_WORDS = int(os.getenv("MIN_ARGUMENT_WORDS", "70"))
+
+# Schritt 3d — deutsches Korrekturmodell (Grammatik/Rechtschreibung/Zeichensetzung), z. B.
+# hf.co/jeorgesilva/llama3.1-german-corrector-q4. Leer = deaktiviert. Eigener Host optional,
+# damit das Modell auch auf einem anderen Ollama-Rechner laufen kann.
+CORRECTOR_MODEL = os.getenv("OLLAMA_CORRECTOR_MODEL", "").strip()
+CORRECTOR_HOST = os.getenv("OLLAMA_CORRECTOR_HOST", "").strip() or OLLAMA_HOST
+# Leitplanken: Eine Korrektur darf den Text nur minimal verändern. Ohne strikten Prompt
+# schreibt das Modell den Post sonst frei um (Inhalt, Länge, Hashtags) — siehe correct_german().
+CORRECTOR_MIN_SIMILARITY = float(os.getenv("CORRECTOR_MIN_SIMILARITY", "0.85"))
+CORRECTOR_MAX_LENGTH_DRIFT = float(os.getenv("CORRECTOR_MAX_LENGTH_DRIFT", "0.05"))
 
 # Verdichtet aus data/style_guide/06_point_of_view.md — direkt in die Bridge-/Writer-
 # Prompts eingebettet statt dem RAG-Retrieval überlassen. RAG liefert pro Aufruf nur 2 von
@@ -317,6 +328,22 @@ def _chat(model: str, system: str, user: str, temperature: float = 0.6) -> str:
         json=payload,
         timeout=TIMEOUT,
     )
+    resp.raise_for_status()
+    return resp.json()["message"]["content"]
+
+
+def _chat_text(host: str, model: str, system: str, user: str, temperature: float = 0.2) -> str:
+    """Wie _chat, aber ohne JSON-Modus — für Modelle, die reinen Text zurückgeben."""
+    payload = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
+        "stream": False,
+        "options": {"temperature": temperature},
+    }
+    resp = requests.post(f"{host}/api/chat", json=payload, timeout=TIMEOUT)
     resp.raise_for_status()
     return resp.json()["message"]["content"]
 
@@ -654,6 +681,62 @@ def _revise_post(article: dict, post_text: str) -> dict | None:
     return last_result
 
 
+_CORRECTOR_SYSTEM = (
+    "Du bist ein Korrektor für deutsche Texte. Korrigiere ausschließlich Fehler in Grammatik, "
+    "Rechtschreibung und Zeichensetzung. Ändere weder Inhalt, Stil, Wortwahl, Absätze noch Hashtags. "
+    "Gib NUR den vollständigen korrigierten Text zurück, ohne Erklärung, ohne Einleitung."
+)
+
+
+def _hashtags(text: str) -> list[str]:
+    return re.findall(r"#\w+", text)
+
+
+def correct_german(post_text: str) -> str:
+    """Schritt 3d: Korrekturdurchgang mit dem deutschen Korrekturmodell.
+
+    Das Modell ist auf Lernertexte trainiert (Grammatik/Rechtschreibung), nicht auf das
+    Schreiben von Posts. Mit striktem Prompt korrigiert es zuverlässig nur Fehler; ohne
+    schreibt es den Text frei um. Deshalb wird das Ergebnis nur übernommen, wenn es eine
+    minimale Änderung ist (Ähnlichkeit, Länge, Absätze, Hashtags, Frachtwerk-Nennungen
+    unverändert, keine neuen verbotenen Phrasen). Im Zweifel — oder bei jedem Fehler —
+    bleibt der unkorrigierte Post erhalten; dieser Schritt verwirft nie einen Post.
+    """
+    if not CORRECTOR_MODEL or not post_text.strip():
+        return post_text
+    try:
+        corrected = _chat_text(CORRECTOR_HOST, CORRECTOR_MODEL, _CORRECTOR_SYSTEM, post_text).strip()
+    except Exception as e:
+        logger.warning("Korrektur: Fehler beim Aufruf von %s — unkorrigierter Post bleibt: %s", CORRECTOR_MODEL, e)
+        return post_text
+
+    original_words, corrected_words = post_text.split(), corrected.split()
+    similarity = difflib.SequenceMatcher(None, original_words, corrected_words).ratio()
+    length_drift = abs(len(corrected_words) - len(original_words)) / max(len(original_words), 1)
+    problems = []
+    if not corrected:
+        problems.append("leere Antwort")
+    if similarity < CORRECTOR_MIN_SIMILARITY:
+        problems.append(f"Ähnlichkeit {similarity:.2f}")
+    if length_drift > CORRECTOR_MAX_LENGTH_DRIFT:
+        problems.append(f"Längenänderung {length_drift:.0%}")
+    if corrected.count("\n\n") != post_text.strip().count("\n\n"):
+        problems.append("Absätze verändert")
+    if _hashtags(corrected) != _hashtags(post_text):
+        problems.append("Hashtags verändert")
+    if corrected.count("Frachtwerk") != post_text.count("Frachtwerk"):
+        problems.append("Frachtwerk-Nennungen verändert")
+    if set(_find_forbidden_phrases(corrected)) - set(_find_forbidden_phrases(post_text)):
+        problems.append("neue verbotene Phrase")
+    if problems:
+        logger.warning("Korrektur verworfen (%s) — unkorrigierter Post bleibt", ", ".join(problems))
+        return post_text
+
+    if corrected != post_text.strip():
+        logger.info("Korrektur übernommen (Ähnlichkeit %.3f)", similarity)
+    return corrected
+
+
 def generate_post(article: dict, bridge: dict | None = None) -> str:
     """Agent 1: erzeugt einen deutschen LinkedIn-Post zum Artikel.
 
@@ -661,7 +744,8 @@ def generate_post(article: dict, bridge: dict | None = None) -> str:
     Argument (Schritt 3a, der inhaltliche Kern), dann Hook/Pivot/Abschluss um das fertige
     Argument (Schritt 3b), schließlich prüft ein echter Überarbeitungsdurchgang Kohärenz,
     Länge und verbotene Phrasen vor der Rückgabe (Schritt 3c) — statt den ganzen
-    strukturierten Post in einem Durchgang mit blindem Längen-Retry zu erzeugen.
+    strukturierten Post in einem Durchgang mit blindem Längen-Retry zu erzeugen. Optional
+    korrigiert danach ein deutsches Korrekturmodell Grammatik und Zeichensetzung (Schritt 3d).
     """
     title = article.get("title", "")[:60]
     kb_context = _build_kb_context(article)
@@ -685,6 +769,8 @@ def generate_post(article: dict, bridge: dict | None = None) -> str:
             logger.info("Agent 1: Überarbeitung hat den Post angepasst — %s", revision.get("reason", "")[:120])
     else:
         logger.warning("Agent 1: Überarbeitung fehlgeschlagen für '%s' — unüberarbeiteter Entwurf wird verwendet", title)
+
+    post_text = correct_german(post_text)
 
     word_count = len(post_text.split())
     if word_count < MIN_POST_WORDS:

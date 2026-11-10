@@ -8,7 +8,7 @@ Selbst gehostete Content-Pipeline, rund um die Uhr in Betrieb, die deutsche Logi
 3. Filtert nach Relevanz mit einem Ollama-LLM-Agenten
 4. Extrahiert den vollständigen Artikeltext (trafilatura, crawl4ai als Fallback)
 5. Baut eine erzählerische Brücke zwischen der Nachricht und dem Alltag einer Spedition (Artikel ohne konkrete, belastbare Auswirkung werden verworfen)
-6. Führt 2 Ollama-LLM-Agenten aus: deutscher Post-Writer + Bildprompt-Generator. Der Post-Writer nutzt RAG: ähnliche freigegebene Posts + Style-Guide-Abschnitte werden aus ChromaDB abgerufen
+6. Führt 2 Ollama-LLM-Agenten aus: deutscher Post-Writer + Bildprompt-Generator. Der Post-Writer nutzt RAG: ähnliche freigegebene Posts + Style-Guide-Abschnitte werden aus ChromaDB abgerufen. Anschließend korrigiert ein eigenes deutsches Korrekturmodell ([jeorgesilva/llama3.1-german-corrector-q4](https://huggingface.co/jeorgesilva/llama3.1-german-corrector-q4)) Grammatik und Zeichensetzung — nur minimale Änderungen werden übernommen, sonst bleibt der Post unverändert
 7. Prüft den erzeugten Post auf werblichen Ton gegenüber Drittunternehmen — wird automatisch verworfen, wenn er wie Werbung/PR für jemand anderen als Frachtwerk klingt (siehe „Anti-Propaganda / kritische Distanz“ unten)
 8. Erzeugt LinkedIn-Headerbilder über Pollinations.ai (kostenlos, kein API-Key)
 9. Speichert Entwürfe in SQLite → zeigt sie in einer Streamlit-Review-Queue an
@@ -22,6 +22,7 @@ n8n (Scheduler)
     └─► engine-api (FastAPI)
             ├─► RSS-Feeds (kuratierte Logistikquellen) ─ Artikelsuche
             ├─► Ollama — Haupt-LLM (Host-Rechner)       qwen2.5-coder:latest
+            ├─► Ollama — Korrekturmodell (Host-Rechner) llama3.1-german-corrector-q4
             ├─► Ollama — Embedding-Modell (Docker)      nomic-embed-text
             ├─► ChromaDB ─ RAG (freigegebene Posts + Style Guide)
             ├─► Pollinations.ai (Bilder)
@@ -46,6 +47,9 @@ docker compose up -d
 
 # Writer-Modell einmalig ins lokale Ollama laden
 ollama pull qwen2.5-coder:latest
+
+# Deutsches Korrekturmodell (Schritt 3d, ~4,9 GB) — optional, leeres OLLAMA_CORRECTOR_MODEL deaktiviert es
+ollama pull hf.co/jeorgesilva/llama3.1-german-corrector-q4
 
 # nomic-embed-text wird beim ersten docker compose up automatisch von ollama-model-init geladen
 
@@ -102,6 +106,8 @@ Alle Einstellungen stehen in `.env` (Kopie von `.env.template`):
 | `OLLAMA_WRITER_MODEL` | `qwen2.5-coder:latest` | LLM für das Schreiben der deutschen Posts |
 | `OLLAMA_IMAGE_PROMPT_MODEL` | `qwen2.5-coder:latest` | LLM für die Bildprompt-Erzeugung |
 | `OLLAMA_REQUEST_TIMEOUT` | `600` | Sekunden bis zum Timeout eines LLM-Aufrufs |
+| `OLLAMA_CORRECTOR_MODEL` | `hf.co/jeorgesilva/llama3.1-german-corrector-q4` | Deutsches Korrekturmodell für Schritt 3d; leer = deaktiviert |
+| `OLLAMA_CORRECTOR_HOST` | leer (= `OLLAMA_HOST`) | Eigener Ollama-Host für das Korrekturmodell |
 | `MAX_ARTICLES` | `10` | Maximale Anzahl ausgewählter Artikel pro Pipeline-Lauf |
 | `EMBED_MODEL` | `nomic-embed-text` | Ollama-Modell für die ChromaDB-Embeddings |
 | `KB_PATH` | `/data/chroma` | Persistenzpfad von ChromaDB |
