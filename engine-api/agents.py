@@ -69,10 +69,10 @@ Du bist ein erfahrener LinkedIn-Ghostwriter für Frachtwerk — KI-gestützte Di
 
 AUFGABE: Schreibe NUR den Kern-Absatz eines LinkedIn-Posts — das Argument. Noch KEIN Hook, kein Pivot, kein Abschluss, keine Hashtags. Diese Reihenfolge ist Absicht: das Argument ist der eigentliche Inhalt; Hook und Abschluss werden erst danach um das fertige Argument herum gebaut.
 
-DEIN JOB IST NICHT, DAS EREIGNIS ZUSAMMENZUFASSEN. Dein Job ist, eine Position dazu zu beziehen — ausgehend von der mitgelieferten Überzeugung (crenca_aplicada), falls vorhanden. Ein Absatz, der auch von jedem anderen Logistik-SaaS stammen könnte, hat noch keine Position bezogen.
+DEIN JOB IST NICHT, DAS EREIGNIS ZUSAMMENZUFASSEN. Dein Job ist, eine Position dazu zu beziehen — ausgehend von der mitgelieferten Überzeugung (applied_belief), falls vorhanden. Ein Absatz, der auch von jedem anderen Logistik-SaaS stammen könnte, hat noch keine Position bezogen.
 
 STRUKTUR:
-1. Argument, 2–4 Sätze Fließtext, KEINE Bullet-Points: entwickle WARUM das für eine Spedition wichtig ist. Nutze questao_contestada und crenca_aplicada als Gerüst.
+1. Argument, 2–4 Sätze Fließtext, KEINE Bullet-Points: entwickle WARUM das für eine Spedition wichtig ist. Nutze contested_question und applied_belief als Gerüst.
 2. Ein konkreter Beleg oder operatives Detail aus dem Artikel, das die Aussage verdient statt nur behauptet.
 3. Optional, nur wenn es sich aus dem Argument zwingend ergibt: Frachtwerk als praktische Konsequenz, höchstens 1 Satz, NIE als Prämisse. "Frachtwerk hilft dabei..." ohne vorheriges Argument ist verboten.
 
@@ -126,7 +126,7 @@ PRÜFE:
 
 Wenn du Probleme findest, korrigiere NUR das Nötige — behalte den Rest des Posts unverändert. Wenn der Post zu kurz ist, entwickle das Argument mit einem zusätzlichen konkreten Satz weiter (erfinde keine neuen Fakten, nutze nur was im mitgelieferten Artikeltext steht). Wenn eine verbotene Phrase gefunden wurde, entferne oder ersetze sie. Wenn nichts zu beanstanden ist, gib den Post EXAKT unverändert zurück.
 
-Antworte NUR als JSON: {"post_text": "...", "changed": true, "motivo": "kurze Begründung auf Deutsch, was ggf. korrigiert wurde, sonst leerer String"}."""
+Antworte NUR als JSON: {"post_text": "...", "changed": true, "reason": "kurze Begründung auf Deutsch, was ggf. korrigiert wurde, sonst leerer String"}."""
 
 _RELEVANCE_SYSTEM = """\
 Du bewertest, ob eine Nachricht eine konkrete, nicht-offensichtliche Auswirkung \
@@ -146,18 +146,18 @@ rein US-interne Marktentwicklungen ohne Bezug zu Import/Export nach Europa; \
 "Logistik ist wichtig" oder allgemeine Wirtschaftsnachrichten ohne Speditions-Impact; \
 Energie- und Klimanachrichten ohne direkten operativen Effekt für Speditionen heute; \
 Tech-Nachrichten oder Unternehmenskäufe ohne operativen Einfluss auf Speditionen. \
-Antworte NUR als JSON: {"relevante": true, "motivo": "Begründung auf Deutsch"} \
-oder {"relevante": false, "motivo": "Begründung auf Deutsch"}."""
+Antworte NUR als JSON: {"relevant": true, "reason": "Begründung auf Deutsch"} \
+oder {"relevant": false, "reason": "Begründung auf Deutsch"}."""
 
 _BRIDGE_ANGLE_FIELDS = """\
     {
-      "o_que_aconteceu": "1-2 Sätze: Was genau passiert ist (konkret, faktenbasiert)",
-      "questao_contestada": "Die umstrittene Annahme/Praxis im Markt, die dieses Ereignis berührt — 1 Satz",
-      "crenca_aplicada": "Die gewählte Überzeugung aus der Bank oben, wörtlich oder leicht ans Ereignis angepasst — leerer String wenn keine wirklich passt",
-      "impacto_para_spedition": "Konkrete Auswirkung für eine Spedition",
-      "risco_ou_oportunidade": "Konkretes Risiko oder Chance im Betrieb",
-      "conexao_frachtwerk": "Optional: wie die gewählte Überzeugung, wenn sie eine praktische Konsequenz verlangt, zu Frachtwerk führt — sonst leerer String",
-      "empresa_mencionada": "Optional: Name der im Artikel zitierten Drittfirma, sonst leerer String"
+      "what_happened": "1-2 Sätze: Was genau passiert ist (konkret, faktenbasiert)",
+      "contested_question": "Die umstrittene Annahme/Praxis im Markt, die dieses Ereignis berührt — 1 Satz",
+      "applied_belief": "Die gewählte Überzeugung aus der Bank oben, wörtlich oder leicht ans Ereignis angepasst — leerer String wenn keine wirklich passt",
+      "impact_for_forwarders": "Konkrete Auswirkung für eine Spedition",
+      "risk_or_opportunity": "Konkretes Risiko oder Chance im Betrieb",
+      "frachtwerk_connection": "Optional: wie die gewählte Überzeugung, wenn sie eine praktische Konsequenz verlangt, zu Frachtwerk führt — sonst leerer String",
+      "mentioned_company": "Optional: Name der im Artikel zitierten Drittfirma, sonst leerer String"
     }"""
 
 _THIRD_PARTY_RULE = """\
@@ -222,7 +222,7 @@ VORGEHEN:
 1. Vergleiche die 3 Ansätze direkt gegeneinander: welcher hat den konkretesten, am wenigsten \
 generischen Impact — belegt durch eine Zahl, einen Akteur oder einen Mechanismus AUS DEM ARTIKEL?
 2. Wähle den stärksten Ansatz. Verwirf die anderen beiden vollständig.
-3. Schärfe impacto_para_spedition und risco_ou_oportunidade des gewählten Ansatzes: wenn der \
+3. Schärfe impact_for_forwarders und risk_or_opportunity des gewählten Ansatzes: wenn der \
 Entwurf noch vage ist ("könnte Auswirkungen haben", "hängt von der Umsetzung ab"), schreibe ihn \
 so um, dass er ein konkretes Detail aus dem Artikel referenziert. Erfinde keine neuen Fakten — \
 nutze nur, was im Artikel steht.
@@ -235,7 +235,7 @@ Antworte mit dem gewählten und geschärften Ansatz als JSON mit exakt den siebe
 Nur wenn ALLE 3 Ansätze nach diesem Vergleich wirklich keine belegbare, konkrete Auswirkung auf \
 eine Spedition haben — nicht weil es unbequem ist, gründlich zu prüfen, sondern weil das Ereignis \
 tatsächlich keinen Hebel für eine Spedition hat — antworte stattdessen:
-{"invalid": true, "motivo": "kurze Begründung auf Deutsch, warum keiner der 3 Ansätze trägt"}."""
+{"invalid": true, "reason": "kurze Begründung auf Deutsch, warum keiner der 3 Ansätze trägt"}."""
 
 _AD_CHECK_SYSTEM = """\
 Du bewertest, ob ein LinkedIn-Beitrag wie eine unabhängige, kritische Analyse eines \
@@ -243,13 +243,13 @@ Branchenthemas klingt — oder wie Werbung/PR für ein bestimmtes DRITTUNTERNEHM
 dessen Produkt. \
 WICHTIG: Frachtwerk ist der Auftraggeber dieses Beitrags — eine kurze, sachliche Erwähnung von \
 Frachtwerk am Ende des Beitrags ist der reguläre, erwünschte Zweck des Textes und zählt NIEMALS \
-als soa_como_ad=true, selbst wenn sie positiv formuliert ist. Bewerte NUR den Ton gegenüber \
+als sounds_like_ad=true, selbst wenn sie positiv formuliert ist. Bewerte NUR den Ton gegenüber \
 Drittfirmen (jedes im Beitrag genannte Unternehmen außer Frachtwerk). \
-Kriterien für "soa_como_ad=true": der Beitrag lobt ein Drittunternehmen, hebt dessen \
+Kriterien für "sounds_like_ad=true": der Beitrag lobt ein Drittunternehmen, hebt dessen \
 Produkt/Lösung positiv hervor, oder liest sich wie eine Erfolgsgeschichte/Case Study eines \
 Dritten. \
-Antworte NUR als JSON: {"soa_como_ad": true, "motivo": "Begründung auf Deutsch"} \
-oder {"soa_como_ad": false, "motivo": "Begründung auf Deutsch"}."""
+Antworte NUR als JSON: {"sounds_like_ad": true, "reason": "Begründung auf Deutsch"} \
+oder {"sounds_like_ad": false, "reason": "Begründung auf Deutsch"}."""
 
 _ART_DIRECTOR_SYSTEM = """\
 You write text-to-image prompts for a clean, professional, editorial LinkedIn header \
@@ -354,13 +354,13 @@ def _build_kb_context(article: dict) -> str:
 def evaluate_relevance(article: dict) -> dict | None:
     """Schritt 1: Prüft, ob der Artikel konkrete Relevanz für eine Spedition hat.
 
-    Gibt {"relevante": bool, "motivo": str} zurück, bei Fehler None.
+    Gibt {"relevant": bool, "reason": str} zurück, bei Fehler None.
     """
     user_msg = (
         f"Schlagzeile: {article.get('title', '')}\n\n"
         f"Zusammenfassung:\n{article.get('full_text', '')[:1000]}"
     )
-    required = ["relevante", "motivo"]
+    required = ["relevant", "reason"]
     for attempt in range(2):
         try:
             raw = _chat(WRITER_MODEL, _RELEVANCE_SYSTEM, user_msg)
@@ -375,7 +375,7 @@ def evaluate_relevance(article: dict) -> dict | None:
 
 def evaluate_promotional_tone(post_text: str) -> dict | None:
     """Schritt 4 (nach der Erzeugung): erkennt Posts, die wie Werbung für ein Drittunternehmen klingen."""
-    required = ["soa_como_ad", "motivo"]
+    required = ["sounds_like_ad", "reason"]
     for attempt in range(2):
         try:
             raw = _chat(WRITER_MODEL, _AD_CHECK_SYSTEM, post_text)
@@ -389,23 +389,23 @@ def evaluate_promotional_tone(post_text: str) -> dict | None:
 
 
 _BRIDGE_ANGLE_KEYS = [
-    "o_que_aconteceu",
-    "questao_contestada",
-    "crenca_aplicada",
-    "impacto_para_spedition",
-    "risco_ou_oportunidade",
-    "conexao_frachtwerk",
+    "what_happened",
+    "contested_question",
+    "applied_belief",
+    "impact_for_forwarders",
+    "risk_or_opportunity",
+    "frachtwerk_connection",
 ]
 
 
-def _brainstorm_angles(article: dict, relevance_motivo: str = "") -> list[dict]:
+def _brainstorm_angles(article: dict, relevance_reason: str = "") -> list[dict]:
     """Schritt 2a: erzeugt bis zu 3 divergente Kandidaten-Bridges (Brainstorming-Schritt).
 
     Gibt eine Liste von Blickwinkel-Dicts zurück (jeweils im Format der alten
     build_bridge-Ausgabe), bei Fehler []. Hier bewusst nicht nach Qualität gefiltert —
     das übernimmt Schritt 2b.
     """
-    context = f"Relevanz-Kontext: {relevance_motivo}\n\n" if relevance_motivo else ""
+    context = f"Relevanz-Kontext: {relevance_reason}\n\n" if relevance_reason else ""
     user_msg = (
         f"{context}"
         f"Schlagzeile: {article.get('title', '')}\n\n"
@@ -455,7 +455,7 @@ def _select_best_angle(article: dict, angles: list[dict]) -> dict | None:
     return None
 
 
-def build_bridge(article: dict, relevance_motivo: str = "") -> dict | None:
+def build_bridge(article: dict, relevance_reason: str = "") -> dict | None:
     """Schritt 2: baut die erzählerische Brücke zwischen Nachricht und Speditionsalltag.
 
     Zweistufiger Ablauf — 3 Kandidaten-Blickwinkel brainstormen (divergent), dann den
@@ -464,12 +464,12 @@ def build_bridge(article: dict, relevance_motivo: str = "") -> dict | None:
     Alternativen ist eine zuverlässigere Qualitätsschranke, als wenn ein Modell seine
     einzige eigene Ausgabe isoliert bewertet.
 
-    Gibt {"o_que_aconteceu", "impacto_para_spedition", "risco_ou_oportunidade",
-    "conexao_frachtwerk", ...} zurück, bei Fehler None.
+    Gibt {"what_happened", "impact_for_forwarders", "risk_or_opportunity",
+    "frachtwerk_connection", ...} zurück, bei Fehler None.
     """
     title = article.get("title", "")[:70]
 
-    angles = _brainstorm_angles(article, relevance_motivo)
+    angles = _brainstorm_angles(article, relevance_reason)
     if not angles:
         logger.info("Brücke verworfen: Brainstorming lieferte keine gültigen Blickwinkel — '%s'", title)
         return None
@@ -481,12 +481,12 @@ def build_bridge(article: dict, relevance_motivo: str = "") -> dict | None:
     if data.get("invalid"):
         logger.info(
             "Brücke verworfen: keiner der %d Blickwinkel ist haltbar — '%s' | %s",
-            len(angles), title, data.get("motivo", "")[:120],
+            len(angles), title, data.get("reason", "")[:120],
         )
         return None
 
-    impact = data.get("impacto_para_spedition", "").strip()
-    risk = data.get("risco_ou_oportunidade", "").strip()
+    impact = data.get("impact_for_forwarders", "").strip()
+    risk = data.get("risk_or_opportunity", "").strip()
     generic_signals = [
         "nicht spezifisch",
         "nicht anwendbar",
@@ -507,15 +507,15 @@ def build_bridge(article: dict, relevance_motivo: str = "") -> dict | None:
 def _format_bridge_context(bridge: dict | None) -> str:
     if not bridge:
         return ""
-    crenca = bridge.get("crenca_aplicada", "") or "(keine — rein informativ behandeln, kein Argument erzwingen)"
+    belief = bridge.get("applied_belief", "") or "(keine — rein informativ behandeln, kein Argument erzwingen)"
     return (
         "=== NARRATIVE BRÜCKE — als Gerüst des Arguments verwenden ===\n"
-        f"Was passiert ist: {bridge.get('o_que_aconteceu', '')}\n"
-        f"Umstrittene Frage/Annahme im Markt: {bridge.get('questao_contestada', '')}\n"
-        f"Angewandte Frachtwerk-Überzeugung: {crenca}\n"
-        f"Konkreter Impact für eine Spedition: {bridge.get('impacto_para_spedition', '')}\n"
-        f"Risiko / Chance: {bridge.get('risco_ou_oportunidade', '')}\n"
-        f"Frachtwerk-Verbindung: {bridge.get('conexao_frachtwerk', '')}\n\n"
+        f"Was passiert ist: {bridge.get('what_happened', '')}\n"
+        f"Umstrittene Frage/Annahme im Markt: {bridge.get('contested_question', '')}\n"
+        f"Angewandte Frachtwerk-Überzeugung: {belief}\n"
+        f"Konkreter Impact für eine Spedition: {bridge.get('impact_for_forwarders', '')}\n"
+        f"Risiko / Chance: {bridge.get('risk_or_opportunity', '')}\n"
+        f"Frachtwerk-Verbindung: {bridge.get('frachtwerk_connection', '')}\n\n"
     )
 
 
@@ -682,7 +682,7 @@ def generate_post(article: dict, bridge: dict | None = None) -> str:
     if revision is not None:
         post_text = revision.get("post_text") or post_text
         if revision.get("changed"):
-            logger.info("Agent 1: Überarbeitung hat den Post angepasst — %s", revision.get("motivo", "")[:120])
+            logger.info("Agent 1: Überarbeitung hat den Post angepasst — %s", revision.get("reason", "")[:120])
     else:
         logger.warning("Agent 1: Überarbeitung fehlgeschlagen für '%s' — unüberarbeiteter Entwurf wird verwendet", title)
 

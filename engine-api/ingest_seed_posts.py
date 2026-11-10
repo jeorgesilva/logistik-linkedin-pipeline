@@ -19,7 +19,7 @@ import kb
 
 SEED_POSTS = [
     {
-        "topic": "Aviação e Infraestrutura",
+        "topic": "Luftfahrt und Infrastruktur",
         "title": "Wenn konventionelle Methoden an ihre Grenzen stossen … fliegen wir weiter.",
         "source_url": "",
         "post_text": (
@@ -46,7 +46,7 @@ SEED_POSTS = [
         ),
     },
     {
-        "topic": "Regulação e Soberania de Dados",
+        "topic": "Regulierung und Datensouveränität",
         "title": "KI-Modell über Nacht abgeschaltet — Datenhoheit ist kein Buzzword",
         "source_url": "",
         "post_text": (

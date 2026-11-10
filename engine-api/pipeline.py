@@ -56,7 +56,7 @@ def _collect_deduped_pool() -> list[dict]:
     return deduped
 
 
-def _process_from_relevance(art: dict, rel_motivo: str) -> int | None:
+def _process_from_relevance(art: dict, rel_reason: str) -> int | None:
     """Schritte 2–4 — setzt voraus, dass `art` Schritt 1 (Relevanz) bereits bestanden hat."""
     try:
         # Volltext-Extraktion — nur für Artikel, die den Filter passiert haben
@@ -69,7 +69,7 @@ def _process_from_relevance(art: dict, rel_motivo: str) -> int | None:
         )
 
         # Schritt 2 — erzählerische Brücke (läuft auf dem vollständigen Artikeltext)
-        bridge = build_bridge(art, relevance_motivo=rel_motivo)
+        bridge = build_bridge(art, relevance_reason=rel_reason)
         if not bridge:
             logger.info(
                 "Verworfen: ungültige Brücke oder generische Auswirkung — '%s'",
@@ -78,8 +78,8 @@ def _process_from_relevance(art: dict, rel_motivo: str) -> int | None:
             return None
         logger.info(
             "=== [SCHRITT 2 — BRÜCKE] Auswirkung='%s' | Risiko='%s'",
-            bridge.get("impacto_para_spedition", "")[:100],
-            bridge.get("risco_ou_oportunidade", "")[:80],
+            bridge.get("impact_for_forwarders", "")[:100],
+            bridge.get("risk_or_opportunity", "")[:80],
         )
 
         # Schritt 3 — Erzeugung des Posts
@@ -94,11 +94,11 @@ def _process_from_relevance(art: dict, rel_motivo: str) -> int | None:
 
         # Schritt 4 — Prüfung auf werblichen Ton
         ad_check = evaluate_promotional_tone(post_text)
-        if ad_check and ad_check.get("soa_como_ad"):
+        if ad_check and ad_check.get("sounds_like_ad"):
             logger.info(
                 "Verworfen: werblicher Ton erkannt — '%s' | %s",
                 art.get("title", "")[:70],
-                ad_check.get("motivo", "")[:120],
+                ad_check.get("reason", "")[:120],
             )
             return None
 
@@ -158,13 +158,13 @@ def _process_articles(articles: list[dict], target_posts: int) -> dict:
 
         # Schritt 1 — Relevanzfilter (läuft auf RSS-Überschrift + Zusammenfassung — schnell)
         relevance = evaluate_relevance(art)
-        rel_flag = relevance.get("relevante") if relevance else None
-        rel_motivo = (relevance.get("motivo", "") if relevance else "parse failed")[:150]
+        rel_flag = relevance.get("relevant") if relevance else None
+        rel_reason = (relevance.get("reason", "") if relevance else "parse failed")[:150]
         logger.info(
             "=== [SCHRITT 1 — FILTER] relevant=%s | %s | '%s'",
             rel_flag,
             art.get("title", "")[:60],
-            rel_motivo,
+            rel_reason,
         )
         if not relevance or not rel_flag:
             logger.info("Verworfen wegen Irrelevanz: %s", art.get("title", "")[:70])
@@ -173,7 +173,7 @@ def _process_articles(articles: list[dict], target_posts: int) -> dict:
         relevant_count += 1
         pipeline_status.mark_relevant()
 
-        post_id = _process_from_relevance(art, rel_motivo)
+        post_id = _process_from_relevance(art, rel_reason)
         if post_id is not None:
             created_ids.append(post_id)
             pipeline_status.mark_post_created()
@@ -223,7 +223,7 @@ def _regenerate_one(post: dict) -> dict:
         logger.info(
             "=== [SCHRITT 2 — BRÜCKE] Neugenerierung Post=%d | Auswirkung='%s'",
             post_id,
-            (bridge.get("impacto_para_spedition", "") if bridge else "FEHLER")[:100],
+            (bridge.get("impact_for_forwarders", "") if bridge else "FEHLER")[:100],
         )
         post_text = generate_post(article, bridge=bridge)
         if not post_text:
