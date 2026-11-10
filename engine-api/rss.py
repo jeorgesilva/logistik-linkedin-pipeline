@@ -157,9 +157,9 @@ def fetch_rss_feeds(feed_configs: list[dict] | None = None) -> list[dict]:
                     "pub_date": entry.get("published", ""),
                 })
 
-            logger.info("RSS %s: %d articles", feed["topic"], len(feed_articles))
+            logger.info("RSS %s: %d Artikel", feed["topic"], len(feed_articles))
         except Exception as e:
-            logger.error("RSS feed error for %s: %s", feed.get("url", "?"), e)
+            logger.error("RSS-Feed-Fehler für %s: %s", feed.get("url", "?"), e)
 
         per_feed.append(feed_articles)
 
@@ -169,5 +169,5 @@ def fetch_rss_feeds(feed_configs: list[dict] | None = None) -> list[dict]:
             if art is not None:
                 articles.append(art)
 
-    logger.info("RSS total: %d unique articles from %d feeds", len(articles), len(feeds))
+    logger.info("RSS gesamt: %d eindeutige Artikel aus %d Feeds", len(articles), len(feeds))
     return articles

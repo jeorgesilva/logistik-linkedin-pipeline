@@ -89,17 +89,17 @@ def _create_draft_post(post_text: str, image_urn: str) -> str:
 def publish_approved_drafts():
     """Überträgt freigegebene Posts als Entwürfe an LinkedIn. No-op bei LINKEDIN_ENABLED=false."""
     if not LINKEDIN_ENABLED:
-        logger.info("LinkedIn publishing disabled (LINKEDIN_ENABLED=false). Skipping.")
+        logger.info("LinkedIn-Veröffentlichung deaktiviert (LINKEDIN_ENABLED=false). Wird übersprungen.")
         return
 
     if not ACCESS_TOKEN or not AUTHOR_URN:
-        logger.error("LINKEDIN_ACCESS_TOKEN or LINKEDIN_AUTHOR_URN not configured.")
+        logger.error("LINKEDIN_ACCESS_TOKEN oder LINKEDIN_AUTHOR_URN nicht konfiguriert.")
         return
 
     from db import list_posts, update_post
 
     approved = [p for p in list_posts(status="approved")]
-    logger.info("Publishing %d approved posts to LinkedIn", len(approved))
+    logger.info("Veröffentliche %d genehmigte Posts auf LinkedIn", len(approved))
 
     for post in approved:
         try:
@@ -109,6 +109,6 @@ def publish_approved_drafts():
 
             linkedin_urn = _create_draft_post(post["post_text"], image_urn)
             update_post(post["id"], status="posted", linkedin_urn=linkedin_urn)
-            logger.info("Posted %d → LinkedIn URN: %s", post["id"], linkedin_urn)
+            logger.info("Post %d veröffentlicht → LinkedIn-URN: %s", post["id"], linkedin_urn)
         except Exception as e:
-            logger.error("Failed to publish post %d: %s", post["id"], e)
+            logger.error("Veröffentlichung von Post %d fehlgeschlagen: %s", post["id"], e)

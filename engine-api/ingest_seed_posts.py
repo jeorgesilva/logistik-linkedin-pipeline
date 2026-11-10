@@ -163,7 +163,7 @@ SEED_POSTS = [
 
 def main():
     db.init_db()
-    print(f"Ingesting {len(SEED_POSTS)} seed posts into SQLite + KB...\n")
+    print(f"Lese {len(SEED_POSTS)} Seed-Posts in SQLite + KB ein...\n")
 
     for i, p in enumerate(SEED_POSTS, 1):
         # Als freigegebenen Post in SQLite anlegen (überspringen, wenn source_url schon existiert)
@@ -187,9 +187,9 @@ def main():
         print(f"           {status}")
 
     stats = kb.get_stats()
-    print(f"\nKB stats after bootstrap: {stats}")
+    print(f"\nKB-Statistik nach dem Bootstrap: {stats}")
     print(
-        f"\nRAG is {'ACTIVE' if stats.get('rag_active') else 'INACTIVE — add more approved posts'}."
+        f"\nRAG ist {'AKTIV' if stats.get('rag_active') else 'INAKTIV — weitere Posts genehmigen'}."
     )
 
 

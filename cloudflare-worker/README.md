@@ -75,7 +75,7 @@ Danach: `docker compose build engine-api && docker compose up -d engine-api`.
 2. Die `engine-api` starten (`docker compose up -d`). Innerhalb von
    `QUEUE_POLL_INTERVAL_SECONDS` (standardmäßig 60 s) sollten die Logs
    (`docker compose logs -f engine-api`) die Meldung
-   `Queue: pending request found ... running pipeline` zeigen.
+   `Queue: offene Anfrage gefunden ... Pipeline wird gestartet` zeigen.
 3. Nach Abschluss die Worker-Seite neu laden — sie sollte „✅ Fertig! N Posts erstellt.“
    anzeigen.
 

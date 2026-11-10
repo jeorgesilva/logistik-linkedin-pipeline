@@ -51,22 +51,22 @@ def poll_once() -> bool:
         resp.raise_for_status()
         data = resp.json()
     except Exception as e:
-        logger.warning("Queue poll failed (worker unreachable?): %s", e)
+        logger.warning("Queue-Abfrage fehlgeschlagen (Worker nicht erreichbar?): %s", e)
         return False
 
     if not data.get("pending"):
         return False
 
     requested_at = data.get("requested_at")
-    logger.info("Queue: pending request found (requested_at=%s) — running pipeline", requested_at)
+    logger.info("Queue: offene Anfrage gefunden (requested_at=%s) — Pipeline wird gestartet", requested_at)
 
     try:
         result = run_batch()
-        summary = f"{result.get('created', 0)} posts criados."
+        summary = f"{result.get('created', 0)} Posts erstellt."
         _report_complete(status="done", requested_at=requested_at, result_summary=summary)
-        logger.info("Queue: request processed — %s", summary)
+        logger.info("Queue: Anfrage verarbeitet — %s", summary)
     except Exception as e:
-        logger.error("Queue: pipeline run failed — %s", e)
+        logger.error("Queue: Pipeline-Lauf fehlgeschlagen — %s", e)
         _report_complete(status="error", requested_at=requested_at, result_summary=str(e)[:300])
 
     return True
@@ -85,17 +85,17 @@ def _report_complete(*, status: str, requested_at: str, result_summary: str) -> 
             timeout=15,
         )
     except Exception as e:
-        logger.error("Queue: failed to report completion back to the worker: %s", e)
+        logger.error("Queue: Abschluss konnte nicht an den Worker gemeldet werden: %s", e)
 
 
 async def poll_loop() -> None:
     """Führt poll_once() zeitgesteuert aus, solange die engine-api läuft."""
     if not QUEUE_WORKER_URL or not QUEUE_SHARED_SECRET:
-        logger.info("Queue poller disabled (QUEUE_WORKER_URL/QUEUE_SHARED_SECRET not set)")
+        logger.info("Queue-Poller deaktiviert (QUEUE_WORKER_URL/QUEUE_SHARED_SECRET nicht gesetzt)")
         return
 
     logger.info(
-        "Queue poller started — checking %s every %ds",
+        "Queue-Poller gestartet — prüft %s alle %ds",
         QUEUE_WORKER_URL,
         QUEUE_POLL_INTERVAL_SECONDS,
     )
@@ -103,5 +103,5 @@ async def poll_loop() -> None:
         try:
             await asyncio.to_thread(poll_once)
         except Exception as e:
-            logger.error("Queue poller loop error: %s", e)
+            logger.error("Queue-Poller: Fehler in der Schleife: %s", e)
         await asyncio.sleep(QUEUE_POLL_INTERVAL_SECONDS)

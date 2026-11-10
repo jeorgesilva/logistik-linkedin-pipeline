@@ -36,10 +36,10 @@ def generate_image(post_id: int, image_prompt: str, seed: int) -> str:
             path = os.path.join(IMAGE_DIR, f"{post_id}.jpg")
             with open(path, "wb") as f:
                 f.write(resp.content)
-            logger.info("Image saved: %s", path)
+            logger.info("Bild gespeichert: %s", path)
             return path
         except Exception as e:
-            logger.warning("Image attempt %d failed: %s", attempt + 1, e)
+            logger.warning("Bild: Versuch %d fehlgeschlagen: %s", attempt + 1, e)
             if attempt < len(_BACKOFF) - 1:
                 time.sleep(backoff)
 

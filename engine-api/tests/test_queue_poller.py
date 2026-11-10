@@ -59,7 +59,7 @@ def test_poll_once_processes_pending_request_and_reports_done(monkeypatch):
     sent = call.kwargs["json"]
     assert sent["status"] == "done"
     assert sent["requested_at"] == "2026-07-16T10:00:00Z"
-    assert "3 posts" in sent["result_summary"]
+    assert sent["result_summary"] == "3 Posts erstellt."
 
 
 def test_poll_once_reports_error_when_pipeline_raises(monkeypatch):

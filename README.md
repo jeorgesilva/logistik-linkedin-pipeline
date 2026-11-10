@@ -332,18 +332,18 @@ docker compose exec ollama ollama list
 
 **Keine Artikel gesammelt:**
 ```bash
-docker compose logs engine-api | grep -E "RSS|articles"
+docker compose logs engine-api | grep -E "RSS|Artikel"
 # Erreichbarkeit eines Feeds manuell prüfen
 curl -s https://logistik-heute.de/rss.xml | head -50
 ```
 
 **Artikel mit leerem full_text:**
 - Manche Seiten mit Paywall lassen sich nicht extrahieren; dann wird die RSS-Zusammenfassung als Fallback verwendet
-- Prüfen: `docker compose logs engine-api | grep "Full text extracted"`
+- Prüfen: `docker compose logs engine-api | grep "Volltext extrahiert"`
 
 **Bilder werden nicht erzeugt:**
 - Pollinations.ai ist kostenlos, aber rate-limitiert; Wiederholungsversuche sind eingebaut
-- Prüfen: `docker compose logs engine-api | grep -i image`
+- Prüfen: `docker compose logs engine-api | grep -iE "bild|image"`
 
 **RAG nicht aktiv (gelbe Anzeige in der UI):**
 - Es werden mindestens `KB_MIN_EXAMPLES` (Standard: 3) freigegebene Posts in ChromaDB benötigt

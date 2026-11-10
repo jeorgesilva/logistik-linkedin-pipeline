@@ -26,7 +26,7 @@ def _extract_with_trafilatura(url: str) -> tuple[str | None, str | None]:
         image = meta.image if meta and meta.image else None
         return text, image
     except Exception as e:
-        logger.debug("trafilatura failed for %s: %s", url, e)
+        logger.debug("trafilatura fehlgeschlagen für %s: %s", url, e)
         return None, None
 
 
@@ -43,7 +43,7 @@ def _extract_with_crawl4ai(url: str) -> tuple[str | None, str | None]:
 
         return asyncio.run(_crawl())
     except Exception as e:
-        logger.debug("crawl4ai failed for %s: %s", url, e)
+        logger.debug("crawl4ai fehlgeschlagen für %s: %s", url, e)
         return None, None
 
 
@@ -52,11 +52,11 @@ def extract_article(url: str, rss_summary: str = "") -> dict:
     text, image = _extract_with_trafilatura(url)
 
     if not text or len(text.strip()) < 100:
-        logger.info("trafilatura insufficient for %s, trying crawl4ai", url)
+        logger.info("trafilatura unzureichend für %s, versuche crawl4ai", url)
         text, image = _extract_with_crawl4ai(url)
 
     if not text or len(text.strip()) < 50:
-        logger.warning("All extractors failed for %s; using RSS summary", url)
+        logger.warning("Alle Extraktoren fehlgeschlagen für %s; RSS-Zusammenfassung wird verwendet", url)
         text = rss_summary
 
     return {

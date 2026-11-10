@@ -52,7 +52,7 @@ def check_and_report_once() -> bool:
         resp.raise_for_status()
         hostname = resp.json().get("hostname")
     except Exception as e:
-        logger.debug("Tunnel reporter: cloudflared metrics unreachable: %s", e)
+        logger.debug("Tunnel reporter: cloudflared-Metriken nicht erreichbar: %s", e)
         return False
 
     if not hostname:
@@ -71,22 +71,22 @@ def check_and_report_once() -> bool:
         )
         resp.raise_for_status()
     except Exception as e:
-        logger.warning("Tunnel reporter: failed to report %s to worker: %s", current_url, e)
+        logger.warning("Tunnel reporter: %s konnte nicht an den Worker gemeldet werden: %s", current_url, e)
         return False
 
     _last_reported_url = current_url
-    logger.info("Tunnel reporter: published new public URL %s", current_url)
+    logger.info("Tunnel reporter: neue öffentliche URL veröffentlicht: %s", current_url)
     return True
 
 
 async def report_loop() -> None:
     """Führt check_and_report_once() zeitgesteuert aus, solange die engine-api läuft."""
     if not QUEUE_WORKER_URL or not QUEUE_SHARED_SECRET:
-        logger.info("Tunnel reporter disabled (QUEUE_WORKER_URL/QUEUE_SHARED_SECRET not set)")
+        logger.info("Tunnel reporter deaktiviert (QUEUE_WORKER_URL/QUEUE_SHARED_SECRET nicht gesetzt)")
         return
 
     logger.info(
-        "Tunnel reporter started — checking %s every %ds",
+        "Tunnel reporter gestartet — prüft %s alle %ds",
         CLOUDFLARED_METRICS_URL,
         TUNNEL_REPORT_INTERVAL_SECONDS,
     )
@@ -94,5 +94,5 @@ async def report_loop() -> None:
         try:
             await asyncio.to_thread(check_and_report_once)
         except Exception as e:
-            logger.error("Tunnel reporter loop error: %s", e)
+            logger.error("Tunnel reporter: Fehler in der Schleife: %s", e)
         await asyncio.sleep(TUNNEL_REPORT_INTERVAL_SECONDS)

@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
     style_guide_path = os.getenv("STYLE_GUIDE_PATH", "/data/style_guide")
     result = kb.ingest_style_guide(style_guide_path)
     logging.getLogger(__name__).info(
-        "Style guide ingested on startup: %d chunks", result.get("ingested", 0)
+        "Style Guide beim Start eingelesen: %d Abschnitte", result.get("ingested", 0)
     )
 
     # Poller für die Warteschlange bei ausgeschaltetem Rechner — No-op, solange

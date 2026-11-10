@@ -347,7 +347,7 @@ def _build_kb_context(article: dict) -> str:
         if parts:
             return "\n\n".join(parts) + "\n\n"
     except Exception as e:
-        logger.debug("KB context skipped: %s", e)
+        logger.debug("KB-Kontext übersprungen: %s", e)
     return ""
 
 
@@ -367,9 +367,9 @@ def evaluate_relevance(article: dict) -> dict | None:
             data = _parse_json_obj(raw, required)
             if data is not None:
                 return data
-            logger.warning("Relevance parse failed (attempt %d): %s", attempt + 1, raw[:200])
+            logger.warning("Relevanzprüfung: Parsing fehlgeschlagen (Versuch %d): %s", attempt + 1, raw[:200])
         except Exception as e:
-            logger.error("Relevance check error (attempt %d): %s", attempt + 1, e)
+            logger.error("Relevanzprüfung: Fehler (Versuch %d): %s", attempt + 1, e)
     return None
 
 
@@ -382,9 +382,9 @@ def evaluate_promotional_tone(post_text: str) -> dict | None:
             data = _parse_json_obj(raw, required)
             if data is not None:
                 return data
-            logger.warning("Ad-check parse failed (attempt %d): %s", attempt + 1, raw[:200])
+            logger.warning("Werbeprüfung: Parsing fehlgeschlagen (Versuch %d): %s", attempt + 1, raw[:200])
         except Exception as e:
-            logger.error("Ad-check error (attempt %d): %s", attempt + 1, e)
+            logger.error("Werbeprüfung: Fehler (Versuch %d): %s", attempt + 1, e)
     return None
 
 
@@ -422,9 +422,9 @@ def _brainstorm_angles(article: dict, relevance_motivo: str = "") -> list[dict]:
                 ]
                 if valid:
                     return valid
-            logger.warning("Brainstorm parse failed (attempt %d): %s", attempt + 1, raw[:200])
+            logger.warning("Brainstorming: Parsing fehlgeschlagen (Versuch %d): %s", attempt + 1, raw[:200])
         except Exception as e:
-            logger.error("Brainstorm error (attempt %d): %s", attempt + 1, e)
+            logger.error("Brainstorming: Fehler (Versuch %d): %s", attempt + 1, e)
     return []
 
 
@@ -449,9 +449,9 @@ def _select_best_angle(article: dict, angles: list[dict]) -> dict | None:
             data = _parse_json_obj(raw, _BRIDGE_ANGLE_KEYS) or _parse_json_obj(raw, ["invalid"])
             if data is not None:
                 return data
-            logger.warning("Bridge select parse failed (attempt %d): %s", attempt + 1, raw[:200])
+            logger.warning("Brückenauswahl: Parsing fehlgeschlagen (Versuch %d): %s", attempt + 1, raw[:200])
         except Exception as e:
-            logger.error("Bridge select error (attempt %d): %s", attempt + 1, e)
+            logger.error("Brückenauswahl: Fehler (Versuch %d): %s", attempt + 1, e)
     return None
 
 
@@ -471,16 +471,16 @@ def build_bridge(article: dict, relevance_motivo: str = "") -> dict | None:
 
     angles = _brainstorm_angles(article, relevance_motivo)
     if not angles:
-        logger.info("Bridge descartada: brainstorm não gerou ângulos válidos — '%s'", title)
+        logger.info("Brücke verworfen: Brainstorming lieferte keine gültigen Blickwinkel — '%s'", title)
         return None
 
     data = _select_best_angle(article, angles)
     if data is None:
-        logger.info("Bridge descartada: seleção falhou (parse) — '%s'", title)
+        logger.info("Brücke verworfen: Auswahl fehlgeschlagen (Parsing) — '%s'", title)
         return None
     if data.get("invalid"):
         logger.info(
-            "Bridge descartada: nenhum dos %d ângulos defensável — '%s' | %s",
+            "Brücke verworfen: keiner der %d Blickwinkel ist haltbar — '%s' | %s",
             len(angles), title, data.get("motivo", "")[:120],
         )
         return None
@@ -496,8 +496,8 @@ def build_bridge(article: dict, relevance_motivo: str = "") -> dict | None:
     ]
     if not impact or not risk or any(s in impact.lower() for s in generic_signals):
         logger.info(
-            "Bridge descartada: impacto/risco vazio ou genérico após seleção — '%s' | impacto='%s'",
-            title, impact[:120] or "(vazio)",
+            "Brücke verworfen: Auswirkung/Risiko nach der Auswahl leer oder generisch — '%s' | Auswirkung='%s'",
+            title, impact[:120] or "(leer)",
         )
         return None
 
@@ -554,7 +554,7 @@ def _draft_argument(article: dict, bridge: dict | None, kb_context: str) -> str:
                 word_count = len(value.split())
                 if word_count < MIN_ARGUMENT_WORDS:
                     logger.warning(
-                        "Argument too short (%d words, min %d) — attempt %d, retrying: %s",
+                        "Argumentation zu kurz (%d Wörter, min. %d) — Versuch %d, neuer Versuch: %s",
                         word_count, MIN_ARGUMENT_WORDS, attempt + 1, value[:100],
                     )
                     user_msg = (
@@ -571,9 +571,9 @@ def _draft_argument(article: dict, bridge: dict | None, kb_context: str) -> str:
                     )
                     continue
                 return value
-            logger.warning("Argument parse failed (attempt %d): %s", attempt + 1, raw[:200])
+            logger.warning("Argumentation: Parsing fehlgeschlagen (Versuch %d): %s", attempt + 1, raw[:200])
         except Exception as e:
-            logger.error("Argument draft error (attempt %d): %s", attempt + 1, e)
+            logger.error("Argumentation: Fehler beim Entwurf (Versuch %d): %s", attempt + 1, e)
     return ""
 
 
@@ -592,9 +592,9 @@ def _frame_post(article: dict, bridge: dict | None, argument_text: str, kb_conte
             data = _parse_json_obj(raw, required)
             if data is not None:
                 return data
-            logger.warning("Frame parse failed (attempt %d): %s", attempt + 1, raw[:200])
+            logger.warning("Rahmung: Parsing fehlgeschlagen (Versuch %d): %s", attempt + 1, raw[:200])
         except Exception as e:
-            logger.error("Frame error (attempt %d): %s", attempt + 1, e)
+            logger.error("Rahmung: Fehler (Versuch %d): %s", attempt + 1, e)
     return None
 
 
@@ -644,13 +644,13 @@ def _revise_post(article: dict, post_text: str) -> dict | None:
                 if not still_found:
                     return data
                 logger.warning(
-                    "Revision left forbidden phrase(s) in place (attempt %d): %s",
+                    "Überarbeitung hat verbotene Formulierung(en) stehen lassen (Versuch %d): %s",
                     attempt + 1, still_found,
                 )
                 continue
-            logger.warning("Revision parse failed (attempt %d): %s", attempt + 1, raw[:200])
+            logger.warning("Überarbeitung: Parsing fehlgeschlagen (Versuch %d): %s", attempt + 1, raw[:200])
         except Exception as e:
-            logger.error("Revision error (attempt %d): %s", attempt + 1, e)
+            logger.error("Überarbeitung: Fehler (Versuch %d): %s", attempt + 1, e)
     return last_result
 
 
@@ -668,12 +668,12 @@ def generate_post(article: dict, bridge: dict | None = None) -> str:
 
     argument_text = _draft_argument(article, bridge, kb_context)
     if not argument_text:
-        logger.warning("Agent 1: argument drafting failed for '%s'", title)
+        logger.warning("Agent 1: Entwurf der Argumentation fehlgeschlagen für '%s'", title)
         return ""
 
     frame = _frame_post(article, bridge, argument_text, kb_context)
     if not frame:
-        logger.warning("Agent 1: framing failed for '%s'", title)
+        logger.warning("Agent 1: Rahmung fehlgeschlagen für '%s'", title)
         return ""
 
     post_text = _assemble_post(frame, argument_text)
@@ -682,14 +682,14 @@ def generate_post(article: dict, bridge: dict | None = None) -> str:
     if revision is not None:
         post_text = revision.get("post_text") or post_text
         if revision.get("changed"):
-            logger.info("Agent 1: revision adjusted post — %s", revision.get("motivo", "")[:120])
+            logger.info("Agent 1: Überarbeitung hat den Post angepasst — %s", revision.get("motivo", "")[:120])
     else:
-        logger.warning("Agent 1: revision step failed for '%s' — using unrevised draft", title)
+        logger.warning("Agent 1: Überarbeitung fehlgeschlagen für '%s' — unüberarbeiteter Entwurf wird verwendet", title)
 
     word_count = len(post_text.split())
     if word_count < MIN_POST_WORDS:
         logger.warning(
-            "Agent 1: post still under %d words (%d) after revision — discarding '%s'",
+            "Agent 1: Post nach der Überarbeitung immer noch unter %d Wörtern (%d) — '%s' wird verworfen",
             MIN_POST_WORDS, word_count, title,
         )
         return ""
@@ -709,7 +709,7 @@ def generate_image_prompt(article: dict, post_text: str) -> str:
             value = _extract_json(raw, "image_prompt")
             if value:
                 return value
-            logger.warning("Agent 2 parse failed (attempt %d): %s", attempt + 1, raw[:200])
+            logger.warning("Agent 2: Parsing fehlgeschlagen (Versuch %d): %s", attempt + 1, raw[:200])
         except Exception as e:
-            logger.error("Agent 2 error (attempt %d): %s", attempt + 1, e)
+            logger.error("Agent 2: Fehler (Versuch %d): %s", attempt + 1, e)
     return "Professional logistics scene, German supply chain, editorial style, 16:9, no text"

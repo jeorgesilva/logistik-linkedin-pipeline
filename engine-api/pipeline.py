@@ -37,7 +37,7 @@ def collect_articles(
     n = max_articles or MAX_ARTICLES
     raw = fetch_rss_feeds()
     selected = dedup_and_rank(raw, top_n=n)
-    logger.info("RSS → dedup/rank: %d → %d articles selected", len(raw), len(selected))
+    logger.info("RSS → Dedup/Ranking: %d → %d Artikel ausgewählt", len(raw), len(selected))
     return selected
 
 
@@ -52,7 +52,7 @@ def _collect_deduped_pool() -> list[dict]:
     """
     raw = fetch_rss_feeds()
     deduped = dedup_and_rank(raw, top_n=len(raw))
-    logger.info("RSS → dedup: %d → %d unique articles available", len(raw), len(deduped))
+    logger.info("RSS → Dedup: %d → %d eindeutige Artikel verfügbar", len(raw), len(deduped))
     return deduped
 
 
@@ -63,7 +63,7 @@ def _process_from_relevance(art: dict, rel_motivo: str) -> int | None:
         extraction = extract_article(art["source_url"], art.get("rss_summary", ""))
         art.update(extraction)
         logger.info(
-            "Full text extracted: %d chars for '%s'",
+            "Volltext extrahiert: %d Zeichen für '%s'",
             len(art.get("full_text", "")),
             art.get("title", "")[:60],
         )
@@ -72,12 +72,12 @@ def _process_from_relevance(art: dict, rel_motivo: str) -> int | None:
         bridge = build_bridge(art, relevance_motivo=rel_motivo)
         if not bridge:
             logger.info(
-                "Descartado: bridge inválida ou impacto genérico — '%s'",
+                "Verworfen: ungültige Brücke oder generische Auswirkung — '%s'",
                 art.get("title", "")[:70],
             )
             return None
         logger.info(
-            "=== [ETAPA 2 — PONTE] impacto='%s' | risco='%s'",
+            "=== [SCHRITT 2 — BRÜCKE] Auswirkung='%s' | Risiko='%s'",
             bridge.get("impacto_para_spedition", "")[:100],
             bridge.get("risco_ou_oportunidade", "")[:80],
         )
@@ -86,17 +86,17 @@ def _process_from_relevance(art: dict, rel_motivo: str) -> int | None:
         post_text = generate_post(art, bridge=bridge)
         if not post_text:
             logger.info(
-                "Descartado: writer retornou vazio — '%s'",
+                "Verworfen: Writer lieferte leeres Ergebnis — '%s'",
                 art.get("title", "")[:70],
             )
             return None
-        logger.info("=== [ETAPA 3 — POST GERADO] ===\n%s", post_text[:400])
+        logger.info("=== [SCHRITT 3 — POST ERZEUGT] ===\n%s", post_text[:400])
 
         # Schritt 4 — Prüfung auf werblichen Ton
         ad_check = evaluate_promotional_tone(post_text)
         if ad_check and ad_check.get("soa_como_ad"):
             logger.info(
-                "Descartado: tom promocional detectado — '%s' | %s",
+                "Verworfen: werblicher Ton erkannt — '%s' | %s",
                 art.get("title", "")[:70],
                 ad_check.get("motivo", "")[:120],
             )
@@ -126,11 +126,11 @@ def _process_from_relevance(art: dict, rel_motivo: str) -> int | None:
             status="draft",
         )
 
-        logger.info("Post %d created: %s", post_id, art.get("title", "")[:60])
+        logger.info("Post %d erstellt: %s", post_id, art.get("title", "")[:60])
         return post_id
 
     except Exception as e:
-        logger.error("Failed processing article '%s': %s", art.get("title", ""), e)
+        logger.error("Verarbeitung des Artikels '%s' fehlgeschlagen: %s", art.get("title", ""), e)
         return None
 
 
@@ -153,7 +153,7 @@ def _process_articles(articles: list[dict], target_posts: int) -> dict:
         pipeline_status.mark_scanned()
 
         if source_url_exists(art["source_url"]):
-            logger.info("Skipping duplicate source_url: %s", art["source_url"][:70])
+            logger.info("Doppelte source_url übersprungen: %s", art["source_url"][:70])
             continue
 
         # Schritt 1 — Relevanzfilter (läuft auf RSS-Überschrift + Zusammenfassung — schnell)
@@ -161,13 +161,13 @@ def _process_articles(articles: list[dict], target_posts: int) -> dict:
         rel_flag = relevance.get("relevante") if relevance else None
         rel_motivo = (relevance.get("motivo", "") if relevance else "parse failed")[:150]
         logger.info(
-            "=== [ETAPA 1 — FILTRO] relevante=%s | %s | '%s'",
+            "=== [SCHRITT 1 — FILTER] relevant=%s | %s | '%s'",
             rel_flag,
             art.get("title", "")[:60],
             rel_motivo,
         )
         if not relevance or not rel_flag:
-            logger.info("Descartado por irrelevância: %s", art.get("title", "")[:70])
+            logger.info("Verworfen wegen Irrelevanz: %s", art.get("title", "")[:70])
             continue
 
         relevant_count += 1
@@ -180,7 +180,7 @@ def _process_articles(articles: list[dict], target_posts: int) -> dict:
 
     if len(created_ids) < target_posts:
         logger.info(
-            "Pool esgotado antes da meta: %d/%d posts criados (%d artigos relevantes de %d escaneados, %d disponíveis no pool)",
+            "Pool vor Erreichen des Ziels erschöpft: %d/%d Posts erstellt (%d relevante von %d geprüften Artikeln, %d im Pool verfügbar)",
             len(created_ids),
             target_posts,
             relevant_count,
@@ -208,7 +208,7 @@ def run_batch(
         pipeline_status.finish()
         return result
     except Exception as e:
-        logger.error("Pipeline run failed: %s", e)
+        logger.error("Pipeline-Lauf fehlgeschlagen: %s", e)
         pipeline_status.finish(error=str(e))
         raise
 
@@ -221,24 +221,24 @@ def _regenerate_one(post: dict) -> dict:
         article["title"] = post.get("title", "")
         bridge = build_bridge(article)
         logger.info(
-            "=== [ETAPA 2 — PONTE] regenerate post=%d | impacto='%s'",
+            "=== [SCHRITT 2 — BRÜCKE] Neugenerierung Post=%d | Auswirkung='%s'",
             post_id,
-            (bridge.get("impacto_para_spedition", "") if bridge else "ERRO")[:100],
+            (bridge.get("impacto_para_spedition", "") if bridge else "FEHLER")[:100],
         )
         post_text = generate_post(article, bridge=bridge)
         if not post_text:
-            logger.warning("Agent returned empty for post %d", post_id)
+            logger.warning("Agent lieferte leeres Ergebnis für Post %d", post_id)
             return {"id": post_id, "success": False, "error": "LLM returned empty"}
         logger.info(
-            "=== [ETAPA 3 — POST GERADO] regenerate post=%d ===\n%s",
+            "=== [SCHRITT 3 — POST ERZEUGT] Neugenerierung Post=%d ===\n%s",
             post_id,
             post_text[:400],
         )
         update_post(post_id, post_text=post_text)
-        logger.info("Regenerated text for post %d", post_id)
+        logger.info("Text für Post %d neu generiert", post_id)
         return {"id": post_id, "success": True}
     except Exception as e:
-        logger.error("Failed regenerating post %d: %s", post_id, e)
+        logger.error("Neugenerierung von Post %d fehlgeschlagen: %s", post_id, e)
         return {"id": post_id, "success": False, "error": str(e)}
 
 
@@ -256,5 +256,5 @@ def regenerate_missing_texts() -> dict:
 
     succeeded = [r["id"] for r in results if r["success"]]
     failed = [r for r in results if not r["success"]]
-    logger.info("Regenerated %d posts, %d failed", len(succeeded), len(failed))
+    logger.info("%d Posts neu generiert, %d fehlgeschlagen", len(succeeded), len(failed))
     return {"regenerated": len(succeeded), "failed": len(failed), "ids": succeeded}
