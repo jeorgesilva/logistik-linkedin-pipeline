@@ -27,6 +27,31 @@ def test_evaluate_promotional_tone_passes_independent_analysis():
     assert result["sounds_like_ad"] is False
 
 
+def _ad_raw(company):
+    return json.dumps({"sounds_like_ad": True, "promoted_company": company, "reason": "Lobt eine Firma"})
+
+
+def test_evaluate_promotional_tone_ignores_frachtwerk_only():
+    with patch("agents._chat", return_value=_ad_raw("Frachtwerk")):
+        result = evaluate_promotional_tone("... Frachtwerk bündelt die Nachweise.")
+    assert result["sounds_like_ad"] is False
+
+
+def test_evaluate_promotional_tone_flags_third_party_company():
+    with patch("agents._chat", return_value=_ad_raw("TGW Logistics")):
+        assert evaluate_promotional_tone("TGW ist Marktführer...")["sounds_like_ad"] is True
+
+
+def test_evaluate_promotional_tone_flags_third_party_listed_with_frachtwerk():
+    with patch("agents._chat", return_value=_ad_raw("Frachtwerk, TGW Logistics")):
+        assert evaluate_promotional_tone("...")["sounds_like_ad"] is True
+
+
+def test_evaluate_promotional_tone_keeps_verdict_without_company():
+    with patch("agents._chat", return_value=_ad_raw("")):
+        assert evaluate_promotional_tone("...")["sounds_like_ad"] is True
+
+
 def test_evaluate_promotional_tone_returns_none_after_failed_parses():
     with patch("agents._chat", return_value="not valid json"):
         result = evaluate_promotional_tone("some post text")
