@@ -8,7 +8,7 @@ target-version = "py311"
 # cloudflared-Metriken), loggt den Fehler immer und liefert einen Fallback. Ein fehlerhafter
 # Artikel oder eine instabile Quelle darf nie den ganzen Pipeline-Lauf oder eine Hintergrundschleife
 # zum Absturz bringen. Für jedes hier NICHT aufgeführte Modul (main.py, db.py, ...) gilt BLE001 weiter.
-"agents.py" = ["BLE001"]          # LLM-Aufrufe: Retry-Schleife, danach Fallback-Wert
+"agents/*.py" = ["BLE001"]        # LLM-Aufrufe: Retry-Schleife, danach Fallback-Wert
 "extract.py" = ["BLE001"]         # trafilatura / crawl4ai auf beliebigen Webseiten
 "images.py" = ["BLE001"]          # Pollinations.ai mit Backoff
 "kb.py" = ["BLE001"]              # ChromaDB/Embeddings: Pipeline läuft ohne RAG weiter

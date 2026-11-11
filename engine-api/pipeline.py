@@ -5,11 +5,11 @@ import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pipeline_status
-from agents import (
+from agents.image import generate_image_prompt
+from agents.writer import (
     build_bridge,
     evaluate_promotional_tone,
     evaluate_relevance,
-    generate_image_prompt,
     generate_post,
 )
 from db import insert_post, list_posts, source_url_exists, update_post

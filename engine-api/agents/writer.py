@@ -4,14 +4,10 @@ import logging
 import os
 import re
 
-import requests
+from agents import llm
 
 logger = logging.getLogger(__name__)
 
-OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://ollama:11434")
-WRITER_MODEL = os.getenv("OLLAMA_WRITER_MODEL", "qwen2.5:14b-instruct")
-IMAGE_PROMPT_MODEL = os.getenv("OLLAMA_IMAGE_PROMPT_MODEL", "llama3.2:3b")
-TIMEOUT = int(os.getenv("OLLAMA_REQUEST_TIMEOUT", "600"))
 POST_LANGUAGE = os.getenv("POST_LANGUAGE", "German")
 MIN_POST_WORDS = int(os.getenv("MIN_POST_WORDS", "100"))
 MAX_POST_WORDS = int(os.getenv("MAX_POST_WORDS", "180"))
@@ -24,7 +20,7 @@ MIN_ARGUMENT_WORDS = int(os.getenv("MIN_ARGUMENT_WORDS", "70"))
 # hf.co/jeorgesilva/llama3.1-german-corrector-q4. Leer = deaktiviert. Eigener Host optional,
 # damit das Modell auch auf einem anderen Ollama-Rechner laufen kann.
 CORRECTOR_MODEL = os.getenv("OLLAMA_CORRECTOR_MODEL", "").strip()
-CORRECTOR_HOST = os.getenv("OLLAMA_CORRECTOR_HOST", "").strip() or OLLAMA_HOST
+CORRECTOR_HOST = os.getenv("OLLAMA_CORRECTOR_HOST", "").strip() or llm.OLLAMA_HOST
 # Leitplanken: Eine Korrektur darf den Text nur minimal verändern. Ohne strikten Prompt
 # schreibt das Modell den Post sonst frei um (Inhalt, Länge, Hashtags) — siehe correct_german().
 CORRECTOR_MIN_SIMILARITY = float(os.getenv("CORRECTOR_MIN_SIMILARITY", "0.85"))
@@ -263,92 +259,6 @@ Nenne in "promoted_company" das beworbene Drittunternehmen (mehrere durch Komma 
 Antworte NUR als JSON: {"sounds_like_ad": true, "promoted_company": "Name", "reason": "Begründung auf Deutsch"} \
 oder {"sounds_like_ad": false, "promoted_company": "", "reason": "Begründung auf Deutsch"}."""
 
-_ART_DIRECTOR_SYSTEM = """\
-You write text-to-image prompts for a clean, professional, editorial LinkedIn header \
-image about the German logistics industry. Given the article topic and the post, produce \
-ONE concise English prompt. Rules: vivid concrete scene (trucks, ports, warehouses, \
-supply chains, etc. as fits the topic); editorial/photographic, modern, neutral palette; \
-16:9; NO text, NO logos, NO real faces or brands. \
-Answer ONLY as JSON: {"image_prompt": "..."}."""
-
-
-def _extract_json(text: str, key: str) -> str | None:
-    """Versucht, {key: value} aus möglicherweise unsauberer LLM-Ausgabe zu extrahieren."""
-    try:
-        data = json.loads(text)
-        if key in data:
-            return data[key]
-    except json.JSONDecodeError:
-        pass
-
-    # Fallback: JSON-Objekt im Text suchen
-    match = re.search(r'\{[^{}]*"' + re.escape(key) + r'"[^{}]*\}', text, re.DOTALL)
-    if match:
-        try:
-            data = json.loads(match.group())
-            return data.get(key)
-        except json.JSONDecodeError:
-            pass
-
-    return None
-
-
-def _parse_json_obj(text: str, required_keys: list) -> dict | None:
-    """Parst ein JSON-Objekt aus der LLM-Ausgabe und prüft, ob alle Pflichtschlüssel vorhanden sind."""
-    try:
-        data = json.loads(text)
-        if isinstance(data, dict) and all(k in data for k in required_keys):
-            return data
-    except json.JSONDecodeError:
-        pass
-    # Fallback: äußerstes JSON-Objekt suchen (fängt Markdown-Codeblöcke und Vorreden ab)
-    match = re.search(r'\{.*\}', text, re.DOTALL)
-    if match:
-        try:
-            data = json.loads(match.group())
-            if isinstance(data, dict) and all(k in data for k in required_keys):
-                return data
-        except json.JSONDecodeError:
-            pass
-    return None
-
-
-def _chat(model: str, system: str, user: str, temperature: float = 0.6) -> str:
-    payload = {
-        "model": model,
-        "messages": [
-            {"role": "system", "content": system},
-            {"role": "user", "content": user},
-        ],
-        "format": "json",
-        "stream": False,
-        "options": {"temperature": temperature},
-    }
-    resp = requests.post(
-        f"{OLLAMA_HOST}/api/chat",
-        json=payload,
-        timeout=TIMEOUT,
-    )
-    resp.raise_for_status()
-    return resp.json()["message"]["content"]
-
-
-def _chat_text(host: str, model: str, system: str, user: str, temperature: float = 0.2) -> str:
-    """Wie _chat, aber ohne JSON-Modus — für Modelle, die reinen Text zurückgeben."""
-    payload = {
-        "model": model,
-        "messages": [
-            {"role": "system", "content": system},
-            {"role": "user", "content": user},
-        ],
-        "stream": False,
-        "options": {"temperature": temperature},
-    }
-    resp = requests.post(f"{host}/api/chat", json=payload, timeout=TIMEOUT)
-    resp.raise_for_status()
-    return resp.json()["message"]["content"]
-
-
 def _build_kb_context(article: dict) -> str:
     """Holt passende Beispiele und Guidelines aus der KB und formatiert sie für den Prompt."""
     try:
@@ -391,8 +301,8 @@ def evaluate_relevance(article: dict) -> dict | None:
     required = ["relevant", "reason"]
     for attempt in range(2):
         try:
-            raw = _chat(WRITER_MODEL, _RELEVANCE_SYSTEM, user_msg)
-            data = _parse_json_obj(raw, required)
+            raw = llm.chat(llm.WRITER_MODEL, _RELEVANCE_SYSTEM, user_msg)
+            data = llm.parse_json_obj(raw, required)
             if data is not None:
                 return data
             logger.warning("Relevanzprüfung: Parsing fehlgeschlagen (Versuch %d): %s", attempt + 1, raw[:200])
@@ -419,8 +329,8 @@ def evaluate_promotional_tone(post_text: str) -> dict | None:
     required = ["sounds_like_ad", "reason"]
     for attempt in range(2):
         try:
-            raw = _chat(WRITER_MODEL, _AD_CHECK_SYSTEM, post_text)
-            data = _parse_json_obj(raw, required)
+            raw = llm.chat(llm.WRITER_MODEL, _AD_CHECK_SYSTEM, post_text)
+            data = llm.parse_json_obj(raw, required)
             if data is not None:
                 if data.get("sounds_like_ad") and _only_frachtwerk_promoted(data):
                     logger.info("Werbeprüfung: nur Frachtwerk genannt — nicht als Werbung gewertet: %s", str(data.get("reason", ""))[:120])
@@ -457,8 +367,8 @@ def _brainstorm_angles(article: dict, relevance_reason: str = "") -> list[dict]:
     )
     for attempt in range(2):
         try:
-            raw = _chat(WRITER_MODEL, _BRAINSTORM_SYSTEM, user_msg, temperature=0.9)
-            data = _parse_json_obj(raw, ["angulos"])
+            raw = llm.chat(llm.WRITER_MODEL, _BRAINSTORM_SYSTEM, user_msg, temperature=0.9)
+            data = llm.parse_json_obj(raw, ["angulos"])
             if data is not None and isinstance(data.get("angulos"), list):
                 valid = [
                     a for a in data["angulos"]
@@ -489,8 +399,8 @@ def _select_best_angle(article: dict, angles: list[dict]) -> dict | None:
     )
     for attempt in range(2):
         try:
-            raw = _chat(WRITER_MODEL, _BRIDGE_SELECT_SYSTEM, user_msg, temperature=0.3)
-            data = _parse_json_obj(raw, _BRIDGE_ANGLE_KEYS) or _parse_json_obj(raw, ["invalid"])
+            raw = llm.chat(llm.WRITER_MODEL, _BRIDGE_SELECT_SYSTEM, user_msg, temperature=0.3)
+            data = llm.parse_json_obj(raw, _BRIDGE_ANGLE_KEYS) or llm.parse_json_obj(raw, ["invalid"])
             if data is not None:
                 return data
             logger.warning("Brückenauswahl: Parsing fehlgeschlagen (Versuch %d): %s", attempt + 1, raw[:200])
@@ -592,8 +502,8 @@ def _draft_argument(article: dict, bridge: dict | None, kb_context: str) -> str:
     # einen Versuch unter MIN_ARGUMENT_WORDS.
     for attempt in range(3):
         try:
-            raw = _chat(WRITER_MODEL, _ARGUMENT_SYSTEM, user_msg)
-            value = _extract_json(raw, "argument_text")
+            raw = llm.chat(llm.WRITER_MODEL, _ARGUMENT_SYSTEM, user_msg)
+            value = llm.extract_json(raw, "argument_text")
             if value:
                 word_count = len(value.split())
                 if word_count < MIN_ARGUMENT_WORDS:
@@ -632,8 +542,8 @@ def _frame_post(article: dict, bridge: dict | None, argument_text: str, kb_conte
     required = ["hook", "pivot", "closing", "hashtags"]
     for attempt in range(2):
         try:
-            raw = _chat(WRITER_MODEL, _FRAME_SYSTEM, user_msg)
-            data = _parse_json_obj(raw, required)
+            raw = llm.chat(llm.WRITER_MODEL, _FRAME_SYSTEM, user_msg)
+            data = llm.parse_json_obj(raw, required)
             if data is not None:
                 return data
             logger.warning("Rahmung: Parsing fehlgeschlagen (Versuch %d): %s", attempt + 1, raw[:200])
@@ -679,8 +589,8 @@ def _revise_post(article: dict, post_text: str) -> dict | None:
             f"=== POST ===\n{current_text}"
         )
         try:
-            raw = _chat(WRITER_MODEL, _REVISE_SYSTEM, user_msg, temperature=0.3)
-            data = _parse_json_obj(raw, required)
+            raw = llm.chat(llm.WRITER_MODEL, _REVISE_SYSTEM, user_msg, temperature=0.3)
+            data = llm.parse_json_obj(raw, required)
             if data is not None and data.get("post_text"):
                 last_result = data
                 current_text = data["post_text"]
@@ -722,7 +632,7 @@ def correct_german(post_text: str) -> str:
     if not CORRECTOR_MODEL or not post_text.strip():
         return post_text
     try:
-        corrected = _chat_text(CORRECTOR_HOST, CORRECTOR_MODEL, _CORRECTOR_SYSTEM, post_text).strip()
+        corrected = llm.chat_text(CORRECTOR_HOST, CORRECTOR_MODEL, _CORRECTOR_SYSTEM, post_text).strip()
     except Exception as e:
         logger.warning("Korrektur: Fehler beim Aufruf von %s — unkorrigierter Post bleibt: %s", CORRECTOR_MODEL, e)
         return post_text
@@ -797,22 +707,3 @@ def generate_post(article: dict, bridge: dict | None = None) -> str:
         )
         return ""
     return post_text
-
-
-def generate_image_prompt(article: dict, post_text: str) -> str:
-    """Agent 2: erzeugt einen englischen Text-to-Image-Prompt."""
-    user_msg = (
-        f"Topic: {article.get('topic', '')}\n"
-        f"Article title: {article.get('title', '')}\n\n"
-        f"LinkedIn post:\n{post_text[:500]}"
-    )
-    for attempt in range(2):
-        try:
-            raw = _chat(IMAGE_PROMPT_MODEL, _ART_DIRECTOR_SYSTEM, user_msg)
-            value = _extract_json(raw, "image_prompt")
-            if value:
-                return value
-            logger.warning("Agent 2: Parsing fehlgeschlagen (Versuch %d): %s", attempt + 1, raw[:200])
-        except Exception as e:
-            logger.error("Agent 2: Fehler (Versuch %d): %s", attempt + 1, e)
-    return "Professional logistics scene, German supply chain, editorial style, 16:9, no text"
