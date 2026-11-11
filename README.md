@@ -146,11 +146,12 @@ RAG wird stillschweigend übersprungen, wenn ChromaDB weniger als `KB_MIN_EXAMPL
 Wenn ein Artikel ein bestimmtes Drittunternehmen nennt, soll die Pipeline kritische Distanz
 wahren, statt das Lob der Quelle zu übernehmen:
 
-- **Prompt-Regeln** (`engine-api/agents.py`, `_BRIDGE_SYSTEM` und `_WRITER_SYSTEM`): Ein genanntes
+- **Prompt-Regeln** (`engine-api/agents/rules.py`, `THIRD_PARTY_RULE` für die Brücke und
+  `WRITER_THIRD_PARTY_RULE` für den Writer): Ein genanntes
   Drittunternehmen (nie Frachtwerk) dient nur als illustratives Beispiel für ein größeres
   Branchenmuster — nie als Protagonist oder „Erfolgsgeschichte“. Der Writer ist angewiesen,
   analytisch zu bleiben (Risiken, Zielkonflikte, Folgen für den Wettbewerb) statt lobend.
-- **Automatische Prüfung** (`evaluate_promotional_tone()` in `agents.py`, eingebunden in
+- **Automatische Prüfung** (`evaluate_promotional_tone()` in `engine-api/agents/moderation.py`, eingebunden in
   `pipeline.py:_process_articles`): Nach der Erzeugung eines Posts klassifiziert ein eigener
   LLM-Aufruf, ob er wie eine unabhängige Analyse oder wie Werbung/PR für ein Drittunternehmen
   klingt. Die eigene (kurze, standardisierte) Erwähnung von Frachtwerk am Ende jedes Posts ist von

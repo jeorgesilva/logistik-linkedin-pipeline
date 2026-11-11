@@ -13,7 +13,8 @@ from pydantic import BaseModel
 import db
 import kb
 import pipeline_status
-from agents import build_bridge, generate_post
+from agents.bridge import build_bridge
+from agents.writer import generate_post
 from extract import extract_article
 from images import regenerate_image
 from pipeline import collect_articles, regenerate_missing_texts, run_batch
