@@ -6,9 +6,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pipeline_status
 from agents.image import generate_image_prompt
+from agents.moderation import evaluate_promotional_tone
 from agents.writer import (
     build_bridge,
-    evaluate_promotional_tone,
     evaluate_relevance,
     generate_post,
 )

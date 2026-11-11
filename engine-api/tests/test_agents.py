@@ -5,9 +5,9 @@ from unittest.mock import patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
+from agents.moderation import evaluate_promotional_tone
 from agents.writer import (
     build_bridge,
-    evaluate_promotional_tone,
     evaluate_relevance,
     generate_post,
 )
