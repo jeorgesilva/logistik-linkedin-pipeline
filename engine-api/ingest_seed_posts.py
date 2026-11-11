@@ -69,7 +69,7 @@ SEED_POSTS = [
         ),
     },
     {
-        "topic": "Crise da Cadeia de Suprimentos",
+        "topic": "Lieferkettenkrise",
         "title": "75 % des deutschen Straßengüterverkehrs stehen vor dem Kollaps",
         "source_url": "",
         "post_text": (
@@ -103,7 +103,7 @@ SEED_POSTS = [
         ),
     },
     {
-        "topic": "Dados de Mercado e KI",
+        "topic": "Marktdaten und KI",
         "title": "17,8 % der Weltbevölkerung nutzt KI — in deutschen Dispoabteilungen?",
         "source_url": "",
         "post_text": (
@@ -129,7 +129,7 @@ SEED_POSTS = [
         ),
     },
     {
-        "topic": "Insolvência e Crise Estrutural",
+        "topic": "Insolvenzen und Strukturkrise",
         "title": "2,907 logistics companies went insolvent in Germany in 2025",
         "source_url": "",
         "post_text": (
