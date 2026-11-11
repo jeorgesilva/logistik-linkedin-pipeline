@@ -146,8 +146,8 @@ RAG wird stillschweigend übersprungen, wenn ChromaDB weniger als `KB_MIN_EXAMPL
 Wenn ein Artikel ein bestimmtes Drittunternehmen nennt, soll die Pipeline kritische Distanz
 wahren, statt das Lob der Quelle zu übernehmen:
 
-- **Prompt-Regeln** (`engine-api/agents/writer.py`, `_THIRD_PARTY_RULE` für die Brücke und
-  `_WRITER_THIRD_PARTY_RULE` für den Writer): Ein genanntes
+- **Prompt-Regeln** (`engine-api/agents/rules.py`, `THIRD_PARTY_RULE` für die Brücke und
+  `WRITER_THIRD_PARTY_RULE` für den Writer): Ein genanntes
   Drittunternehmen (nie Frachtwerk) dient nur als illustratives Beispiel für ein größeres
   Branchenmuster — nie als Protagonist oder „Erfolgsgeschichte“. Der Writer ist angewiesen,
   analytisch zu bleiben (Risiken, Zielkonflikte, Folgen für den Wettbewerb) statt lobend.

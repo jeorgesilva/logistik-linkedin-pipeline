@@ -1,4 +1,5 @@
-from agents.writer import build_bridge, evaluate_relevance, generate_post
+from agents.bridge import build_bridge, evaluate_relevance
+from agents.writer import generate_post
 
 ARTICLES = [
     {

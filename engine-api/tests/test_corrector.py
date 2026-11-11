@@ -4,8 +4,8 @@ from unittest.mock import patch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from agents import writer
-from agents.writer import correct_german
+from agents import corrector
+from agents.corrector import correct_german
 
 POST = (
     "Wer seine Nachunternehmer nicht lückenlos dokumentiert haftet im Zweifel mit. "
@@ -17,11 +17,11 @@ FIXED = POST.replace("dokumentiert haftet", "dokumentiert, haftet").replace("nur
 
 
 def _enabled():
-    return patch.object(writer, "CORRECTOR_MODEL", "german-corrector")
+    return patch.object(corrector, "CORRECTOR_MODEL", "german-corrector")
 
 
 def test_disabled_returns_text_without_calling_model():
-    with patch.object(writer, "CORRECTOR_MODEL", ""), patch("agents.llm.chat_text") as chat:
+    with patch.object(corrector, "CORRECTOR_MODEL", ""), patch("agents.llm.chat_text") as chat:
         assert correct_german(POST) == POST
     chat.assert_not_called()
 
