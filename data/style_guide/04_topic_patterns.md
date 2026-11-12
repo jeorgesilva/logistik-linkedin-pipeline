@@ -6,7 +6,7 @@
 ## Topic 1: Industry Crisis / Negative News
 *(insolvency wave, freight capacity collapse, carrier failures)*
 
-**Posicionamento aplicável (`06_point_of_view.md`):** crença 4 (preço baixo = sintoma de queima de substância) e crença 7 (crise estrutural, atinge compradores com 6–12 meses de atraso). Um post de opinião sobre este tópico normalmente ancora em uma das duas, ou nas duas combinadas — Pattern F é uma opção tão válida quanto Pattern C/E aqui.
+**Applicable position (`06_point_of_view.md`):** belief 4 (low price = symptom of burning through substance) and belief 7 (structural crisis, reaches buyers with a 6–12 month delay). An opinion post on this topic usually anchors in one of the two, or both combined — Pattern F is as valid an option as Pattern C/E here.
 
 ### Framing principles
 - **Do not editorialize** on the failed companies. Name them, state the facts, move on.
@@ -39,7 +39,7 @@
 ## Topic 2: Market Trend / Industry Data Report
 *(Microsoft AI report, DVZ analysis, Eurostat freight data)*
 
-**Posicionamento aplicável (`06_point_of_view.md`):** crença 1 (comunicação é o custo invisível, o setor olha para o que brilha) e crença 8 (adoção de IA é mais hype do que prática — barreira técnica caiu, falta integração). A maioria dos relatórios de mercado serve para provar uma dessas duas teses, não para ser noticiada neutramente.
+**Applicable position (`06_point_of_view.md`):** belief 1 (communication is the invisible cost, the industry looks at what shines) and belief 8 (AI adoption is more hype than practice — the technical barrier has fallen, integration is missing). Most market reports serve to prove one of these two theses, not to be reported neutrally.
 
 ### Framing principles
 - **Source first**: name the report, date, publisher — within the first 2 sentences.
@@ -65,7 +65,7 @@
 ## Topic 3: Regulatory / Political Event
 *(AI model shutdown, DSGVO enforcement, US tech policy affecting German businesses)*
 
-**Posicionamento aplicável (`06_point_of_view.md`):** crença 5 (soberania de dados é gestão de risco, não bandeira política). Este é o tópico onde a linha entre opinião e posição política é mais fina — a crença 5 existe justamente para manter o argumento no terreno operacional.
+**Applicable position (`06_point_of_view.md`):** belief 5 (data sovereignty is risk management, not a political flag). This is the topic where the line between opinion and political stance is thinnest — belief 5 exists precisely to keep the argument on operational ground.
 
 ### Framing principles
 - **Open with the specific event** — date, what happened, who acted. No opinion yet.
@@ -92,7 +92,7 @@
 ## Topic 4: Product / Capability Showcase
 *(What Frachtwerk actually does, specific automation workflows)*
 
-**Posicionamento aplicável (`06_point_of_view.md`):** crença 2 (sugestão não é automação, é mais um clique) e crença 3 (sistemas de registro documentam, não agem — quem decide é o postfach) e crença 6 (IA genérica entende linguagem, não spedition). Este tópico é o único onde o produto é o protagonista por definição — mas ainda deve ser ancorado numa dessas crenças, não apenas descrito.
+**Applicable position (`06_point_of_view.md`):** belief 2 (a suggestion is not automation, it is one more click), belief 3 (systems of record document, they don't act — decisions happen in the inbox) and belief 6 (generic AI understands language, not freight forwarding). This is the only topic where the product is the protagonist by definition — but it must still be anchored in one of these beliefs, not just described.
 
 ### Framing principles
 - **Show the specific workflow**, not the category: *„Statusabfragen, ETA-Updates, Rückfragen aus dem Postfach, Stammdatenpflege"* — not *„administrative tasks"*.
@@ -118,7 +118,7 @@
 ## Topic 5: Aviation / Infrastructure Logistics
 *(Helicopter operations, power line construction, remote area projects)*
 
-**Posicionamento aplicável (`06_point_of_view.md`):** nenhuma, por design. Este tópico constrói credibilidade operacional, não argumenta uma tese — não force uma crença aqui.
+**Applicable position (`06_point_of_view.md`):** none, by design. This topic builds operational credibility; it does not argue a thesis — don't force a belief here.
 
 ### Framing principles
 - **Dramatic contrast** as opener: *„Wenn konventionelle Methoden an ihre Grenzen stoßen... fliegen wir weiter."*
@@ -138,7 +138,7 @@
 
 ## Quick Reference: Tone by Topic
 
-| Topic | Urgency | Formality | Frachtwerk prominence | Aphorism? | Crença(s) aplicável(is) |
+| Topic | Urgency | Formality | Frachtwerk prominence | Aphorism? | Applicable belief(s) |
 |---|---|---|---|---|---|
 | Crisis / Insolvency | High | Medium | Low-medium, or none in Pattern F | Yes — required | 4, 7 |
 | Market Data | Medium | Medium | Medium, or none in Pattern F | Optional | 1, 8 |
