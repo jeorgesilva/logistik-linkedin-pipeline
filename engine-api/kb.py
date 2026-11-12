@@ -210,11 +210,13 @@ def ingest_style_guide(path: str = STYLE_GUIDE_PATH) -> dict:
     logger.info("Style Guide wird eingelesen: %d Dateien aus %s", len(md_files), path)
 
     ingested = failed = 0
+    current_ids: set[str] = set()
     for md_file in md_files:
         try:
             content = md_file.read_text(encoding="utf-8")
             chunks = _split_by_h2(content, md_file.name)
             for doc_id, text, metadata in chunks:
+                current_ids.add(doc_id)
                 if ingest_guideline(doc_id, text, metadata):
                     ingested += 1
                 else:
@@ -223,8 +225,32 @@ def ingest_style_guide(path: str = STYLE_GUIDE_PATH) -> dict:
             logger.error("Verarbeitung von %s fehlgeschlagen: %s", md_file.name, e)
             failed += 1
 
-    logger.info("Style Guide eingelesen: %d Abschnitte eingelesen, %d fehlgeschlagen", ingested, failed)
-    return {"ingested": ingested, "failed": failed}
+    removed = _remove_stale_guidelines(current_ids) if failed == 0 else 0
+    logger.info(
+        "Style Guide eingelesen: %d Abschnitte eingelesen, %d fehlgeschlagen, %d veraltete entfernt",
+        ingested, failed, removed,
+    )
+    return {"ingested": ingested, "failed": failed, "removed": removed}
+
+
+def _remove_stale_guidelines(current_ids: set[str]) -> int:
+    """Löscht Abschnitte, die es im Style Guide nicht mehr gibt.
+
+    Die Doc-IDs bestehen aus Dateiname und Abschnittsüberschrift. Ohne diesen Schritt bleiben nach
+    dem Umbenennen einer Überschrift oder dem Löschen einer Datei die alten Abschnitte per Upsert
+    in der Collection liegen und werden weiter abgerufen. Wird nur nach einem fehlerfreien Lauf
+    aufgerufen, damit ein Teilfehler nie gültige Abschnitte entfernt.
+    """
+    try:
+        _, gu_col, _ = _get_collections()
+        stale = [doc_id for doc_id in gu_col.get(include=[])["ids"] if doc_id not in current_ids]
+        if stale:
+            gu_col.delete(ids=stale)
+            logger.info("Veraltete Style-Guide-Abschnitte entfernt: %s", ", ".join(stale))
+        return len(stale)
+    except Exception as e:
+        logger.error("Veraltete Style-Guide-Abschnitte konnten nicht entfernt werden: %s", e)
+        return 0
 
 
 def _split_by_h2(content: str, filename: str) -> list[tuple[str, str, dict]]:
