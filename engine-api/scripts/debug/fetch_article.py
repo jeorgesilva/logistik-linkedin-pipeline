@@ -25,13 +25,13 @@ def fetch_article_text(url: str) -> str:
     try:
         downloaded = trafilatura.fetch_url(url)
         if not downloaded:
-            logger.warning("fetch_article_text: no content downloaded from %s", url)
+            logger.warning("fetch_article_text: kein Inhalt von %s heruntergeladen", url)
             return ""
         text = trafilatura.extract(downloaded, include_comments=False, favor_recall=True)
         if not text:
-            logger.warning("fetch_article_text: trafilatura returned no text for %s", url)
+            logger.warning("fetch_article_text: trafilatura lieferte keinen Text für %s", url)
             return ""
         return text.strip()
     except Exception as exc:
-        logger.warning("fetch_article_text: failed for %s — %s", url, exc)
+        logger.warning("fetch_article_text: fehlgeschlagen für %s — %s", url, exc)
         return ""

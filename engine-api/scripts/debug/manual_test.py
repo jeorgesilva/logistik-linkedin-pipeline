@@ -53,7 +53,7 @@ ARTICLES = [
     },
 ]
 
-print(f"Fila: {len(ARTICLES)} artigo(s) para testar\n")
+print(f"Warteschlange: {len(ARTICLES)} Artikel zum Testen\n")
 print("=" * 60)
 
 for i, article in enumerate(ARTICLES, 1):
@@ -62,30 +62,30 @@ for i, article in enumerate(ARTICLES, 1):
 
     rel = evaluate_relevance(article)
     rel_flag = rel.get("relevant") if rel else False
-    print(f"RELEVANCE → {rel_flag} | {(rel.get('reason', '') if rel else 'parse error')[:120]}")
+    print(f"RELEVANZ → {rel_flag} | {(rel.get('reason', '') if rel else 'Parsing-Fehler')[:120]}")
 
     if not rel or not rel_flag:
-        print("→ DESCARTADO (relevance). Próximo artigo.\n")
+        print("→ VERWORFEN (Relevanz). Nächster Artikel.\n")
         continue
 
     bridge = build_bridge(article, rel.get("reason", ""))
     if not bridge:
-        print("→ DESCARTADO (bridge inválida ou impacto genérico). Próximo artigo.\n")
+        print("→ VERWORFEN (ungültige Brücke oder generische Auswirkung). Nächster Artikel.\n")
         continue
 
-    print(f"BRIDGE impact → {bridge.get('impact_for_forwarders', '')[:120]}")
+    print(f"BRÜCKE Auswirkung → {bridge.get('impact_for_forwarders', '')[:120]}")
 
     post = generate_post(article, bridge)
     if not post:
-        print("→ DESCARTADO (writer vazio). Próximo artigo.\n")
+        print("→ VERWORFEN (Writer lieferte keinen Text). Nächster Artikel.\n")
         continue
 
     print("\n" + "=" * 60)
-    print("POST GERADO:")
+    print("ERZEUGTER POST:")
     print("=" * 60)
     print(post)
     print("=" * 60)
-    print(f"\n✓ Pipeline completo com artigo [{i}]: '{article['title'][:70]}'")
+    print(f"\n✓ Pipeline vollständig durchlaufen mit Artikel [{i}]: '{article['title'][:70]}'")
     break
 else:
-    print("\n✗ Nenhum artigo passou por todos os filtros.")
+    print("\n✗ Kein Artikel hat alle Filter passiert.")

@@ -40,23 +40,23 @@ def _normalize(article: dict) -> dict:
 
 def main() -> None:
     if not _JSON_PATH.exists():
-        logger.error("Article file not found: %s", _JSON_PATH)
+        logger.error("Artikeldatei nicht gefunden: %s", _JSON_PATH)
         sys.exit(1)
 
     raw = json.loads(_JSON_PATH.read_text(encoding="utf-8"))
     if not isinstance(raw, list) or not raw:
-        logger.error("manual_articles.json must be a non-empty JSON array")
+        logger.error("manual_articles.json muss ein nicht leeres JSON-Array sein")
         sys.exit(1)
 
-    logger.info("Loaded %d article(s) from %s", len(raw), _JSON_PATH.name)
+    logger.info("%d Artikel aus %s geladen", len(raw), _JSON_PATH.name)
 
     articles = [_normalize(a) for a in raw]
     result = _process_articles(articles)
 
     logger.info(
-        "Done — %d post(s) created | ids: %s",
+        "Fertig — %d Post(s) erstellt | IDs: %s",
         result["created"],
-        result["ids"] or "none",
+        result["ids"] or "keine",
     )
 
 
